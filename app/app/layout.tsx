@@ -29,6 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             items={[
               { href: "/app", label: t("nav_over") },
               { href: "/app/tenders", label: t("nav_tenders") },
+              { href: "/app/nest", label: t("nav_nest") },
               { href: "/app/documents", label: t("nav_docs") },
               { href: "/app/team", label: t("nav_team") },
             ]}

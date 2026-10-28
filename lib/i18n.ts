@@ -219,6 +219,22 @@ const W = {
   expired: ["Imeisha", "Expired"],
   open: ["Fungua", "Open"],
   vault_empty: ["Bado hakuna nyaraka. Pakia ya kwanza hapo juu.", "No documents yet. Upload the first one above."],
+  // NeST import
+  nav_nest: ["NeST", "NeST"],
+  nest_t: ["Tenda mpya kutoka NeST", "New tenders on NeST"],
+  nest_s: ["Tenda zilizotangazwa na bado ziko wazi, zinazolingana na maneno yako ya kutafutia", "Published tenders still open that match your search words"],
+  nest_kw: ["Maneno ya kutafutia", "Search words"],
+  nest_kwHint: ["Tenganisha kwa koma. Mfano: laptop, printer, cement, rice", "Separate with commas. E.g. laptop, printer, cement, rice"],
+  nest_all: ["Onyesha tenda zote zilizo wazi", "Show every open tender"],
+  nest_mine: ["Onyesha zinazolingana tu", "Show matches only"],
+  nest_add: ["Ongeza zilizochaguliwa", "Add selected"],
+  nest_added: ["Imeshaongezwa", "Already added"],
+  nest_found: ["{n} zimepatikana", "{n} found"],
+  nest_none: ["Hakuna tenda iliyo wazi inayolingana na maneno yako sasa hivi.", "No open tender matches your search words right now."],
+  nest_fail: ["Imeshindikana kufungua NeST sasa hivi. Jaribu tena baadaye.", "Could not reach NeST right now. Try again later."],
+  nest_done: ["Tenda {n} zimeongezwa", "{n} tenders added"],
+  nest_fromNest: ["Imeongezwa kutoka NeST", "Added from NeST"],
+  lots: ["Lots", "Lots"],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type Key = keyof typeof W;
