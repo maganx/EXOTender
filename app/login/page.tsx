@@ -41,3 +41,5 @@ export default function LoginPage({ searchParams }: { searchParams: Record<strin
     </AuthShell>
   );
 }
+
+export const runtime = "edge";

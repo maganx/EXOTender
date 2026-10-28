@@ -25,3 +25,5 @@ export default async function InvitePage({ params, searchParams }: { params: { t
     </AuthShell>
   );
 }
+
+export const runtime = "edge";

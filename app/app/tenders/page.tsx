@@ -93,3 +93,5 @@ export default async function TenderList({ searchParams }: { searchParams: Recor
     </>
   );
 }
+
+export const runtime = "edge";

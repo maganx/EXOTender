@@ -1,6 +1,5 @@
 "use server";
 
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -20,7 +19,7 @@ export async function uploadDoc(fd: FormData) {
   if (!(file instanceof File) || !file.size) back("no file");
   if (file.size > MAX) back("max 10 MB");
   const safe = file.name.replace(/[^A-Za-z0-9._-]+/g, "_").slice(-80);
-  const path = `${ctx.orgId}/${randomUUID()}-${safe}`;
+  const path = `${ctx.orgId}/${crypto.randomUUID()}-${safe}`;
   const supabase = createClient();
   const up = await supabase.storage.from("company-docs").upload(path, file, { contentType: file.type || "application/octet-stream" });
   if (up.error) back(up.error.message);

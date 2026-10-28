@@ -25,3 +25,5 @@ export default function Onboarding({ searchParams }: { searchParams: Record<stri
     </AuthShell>
   );
 }
+
+export const runtime = "edge";

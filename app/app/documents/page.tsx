@@ -107,3 +107,5 @@ export default async function Vault({ searchParams }: { searchParams: Record<str
     </>
   );
 }
+
+export const runtime = "edge";

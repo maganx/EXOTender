@@ -61,3 +61,5 @@ export default async function NewTender({ searchParams }: { searchParams: Record
     </>
   );
 }
+
+export const runtime = "edge";

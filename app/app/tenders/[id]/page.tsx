@@ -533,3 +533,5 @@ async function LogTab({ id, canWrite, t, lang }: { id: string; canWrite: boolean
     </>
   );
 }
+
+export const runtime = "edge";

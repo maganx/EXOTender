@@ -127,3 +127,5 @@ export default async function TeamPage({ searchParams }: { searchParams: Record<
     </>
   );
 }
+
+export const runtime = "edge";

@@ -10,3 +10,5 @@ export async function GET(request: NextRequest) {
   if (code) await createClient().auth.exchangeCodeForSession(code);
   return NextResponse.redirect(new URL(next, url.origin));
 }
+
+export const runtime = "edge";

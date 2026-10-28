@@ -104,3 +104,5 @@ export default async function Overview() {
     </>
   );
 }
+
+export const runtime = "edge";
