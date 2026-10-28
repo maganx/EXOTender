@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { signIn, signUp } from "@/app/actions";
+import { resendConfirmation, signIn, signUp } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
 import { getT } from "@/lib/i18n";
 
@@ -16,6 +16,16 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
       {searchParams.error && <div className="err">{t("badLogin")}</div>}
       {searchParams.msg && <div className="err">{searchParams.msg}</div>}
       {searchParams.sent && <div className="ok">{t("checkEmail")}</div>}
+      {(searchParams.unconfirmed || searchParams.expired) && (
+        <>
+          <div className="err">{searchParams.unconfirmed ? t("unconfirmed") : t("expiredLink")}</div>
+          <form action={resendConfirmation} className="inline">
+            <input type="hidden" name="next" value={next} />
+            <input className="mini" name="email" type="email" required defaultValue={searchParams.email ?? ""} placeholder={t("email")} aria-label={t("email")} />
+            <button className="btn sm" type="submit">{t("resend")}</button>
+          </form>
+        </>
+      )}
       <form action={signup ? signUp : signIn} className="fields" style={{ gridTemplateColumns: "1fr" }}>
         <input type="hidden" name="next" value={next} />
         {signup && (

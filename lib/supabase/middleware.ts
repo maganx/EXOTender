@@ -27,6 +27,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  // Supabase sends failed email links back to the site root with error params
+  if (request.nextUrl.searchParams.get("error_code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "?expired=1";
+    return NextResponse.redirect(url);
+  }
   if (!user && !PUBLIC.some((p) => path.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

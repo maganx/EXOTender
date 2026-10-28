@@ -28,6 +28,9 @@ const W = {
   noAcc: ["Huna akaunti? Fungua mpya", "No account? Create one"],
   checkEmail: ["Tumekutumia barua pepe. Fungua link iliyomo kuthibitisha akaunti yako.", "We sent you an email. Open the link in it to confirm your account."],
   badLogin: ["Barua pepe au neno la siri si sahihi.", "Wrong email or password."],
+  unconfirmed: ["Barua pepe yako bado haijathibitishwa. Fungua link tuliyokutumia, au omba barua mpya.", "Your email is not confirmed yet. Open the link we sent you, or ask for a new email."],
+  expiredLink: ["Link hiyo imeisha muda au imeshatumika. Ingia kama kawaida, au andika barua pepe yako hapa chini upate link mpya.", "That link has expired or was already used. Sign in as usual, or enter your email below to get a new link."],
+  resend: ["Tuma tena barua ya uthibitisho", "Resend confirmation email"],
   // onboarding
   onb_t: ["Sajili kampuni yako", "Register your company"],
   onb_s: ["Utakuwa mmiliki (Owner) wa kampuni hii kwenye mfumo, na utaweza kualika timu yako.", "You become the company's owner in the system and can invite your team."],

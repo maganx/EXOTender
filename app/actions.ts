@@ -21,8 +21,23 @@ export async function signIn(formData: FormData) {
     email: String(formData.get("email") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
   });
+  if (error?.code === "email_not_confirmed")
+    redirect(`/login?unconfirmed=1&email=${encodeURIComponent(String(formData.get("email") ?? "").trim())}&next=${encodeURIComponent(next)}`);
   if (error) redirect(`/login?error=1&next=${encodeURIComponent(next)}`);
   redirect(next);
+}
+
+export async function resendConfirmation(formData: FormData) {
+  const supabase = await createClient();
+  const email = String(formData.get("email") ?? "").trim();
+  const next = safeNext(formData.get("next"));
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${await siteUrl()}/auth/callback?next=${encodeURIComponent(next)}` },
+  });
+  if (error) redirect(`/login?msg=${encodeURIComponent(error.message)}&next=${encodeURIComponent(next)}`);
+  redirect(`/login?sent=1&next=${encodeURIComponent(next)}`);
 }
 
 export async function signUp(formData: FormData) {
