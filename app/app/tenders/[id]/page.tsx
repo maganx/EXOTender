@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as A from "../actions";
+import { deleteTenderFile } from "../files";
+import { FileUpload, TenderReader } from "@/components/TenderUploads";
 import { DueChip, StageTag } from "@/components/bits";
 import {
   STAGES, addDays, canEdit, canEditPayments, canSeeMoney, fmtDate, isAdmin, money, nextAction, toLocalInput,
@@ -232,7 +234,7 @@ export default async function TenderPage(props: { params: Promise<{ id: string }
         </details>
       )}
 
-      {tab === "docs" && <DocsTab x={x} docs={docs} edit={edit} t={t} orgId={ctx.orgId} />}
+      {tab === "docs" && <DocsTab x={x} docs={docs} edit={edit} t={t} orgId={ctx.orgId} lang={lang} />}
 
       {tab === "price" &&
         (seeMoney ? (
@@ -434,11 +436,61 @@ function PriceStats({ p, t }: { p: Pricing | null; t: T }) {
   );
 }
 
-async function DocsTab({ x, docs, edit, t, orgId }: { x: Tender; docs: TDoc[]; edit: boolean; t: T; orgId: string }) {
-  const { data: vault } = await (await createClient()).from("company_documents").select("id, title, kind, expires_on").eq("org_id", orgId).order("title");
+const UPLOAD_KEYS = [
+  "upload", "uploading", "kind", "k_tender", "k_bid", "k_other", "forDoc", "none", "file", "tooBig",
+  "ai_h", "ai_hint", "ai_pick", "ai_pages", "ai_asking", "ai_found", "ai_add", "ai_left", "ai_cancel", "ai_page",
+] as const;
+
+async function DocsTab({ x, docs, edit, t, orgId, lang }: { x: Tender; docs: TDoc[]; edit: boolean; t: T; orgId: string; lang: "sw" | "en" }) {
+  const supabase = await createClient();
+  const [{ data: vault }, { data: files }] = await Promise.all([
+    supabase.from("company_documents").select("id, title, kind, expires_on").eq("org_id", orgId).order("title"),
+    supabase.from("tender_files").select("id, kind, title, storage_path, size_bytes, tender_document_id, created_at").eq("tender_id", x.id).order("created_at"),
+  ]);
+  const signed = files?.length ? (await supabase.storage.from("company-docs").createSignedUrls(files.map((f) => f.storage_path), 60 * 30)).data ?? [] : [];
+  const urlFor = (path: string) => signed.find((u) => u.path === path)?.signedUrl;
+  const filesFor = (docId: string) => (files ?? []).filter((f) => f.tender_document_id === docId);
+  const L = Object.fromEntries(UPLOAD_KEYS.map((k) => [k, t(k)])) as Record<(typeof UPLOAD_KEYS)[number], string>;
   const counted = docs.filter((d) => d.status !== "na");
   const done = counted.filter((d) => d.status === "done").length;
   return (
+    <>
+    {edit && <TenderReader orgId={orgId} tenderId={x.id} L={L} />}
+    <section className="sec">
+      <h3>{t("files_h")}</h3>
+      <p className="hint">{t("files_hint")}</p>
+      {files?.length ? (
+        <ul className="flist">
+          {files.map((f) => {
+            const url = urlFor(f.storage_path);
+            const forDoc = docs.find((d) => d.id === f.tender_document_id);
+            return (
+              <li key={f.id}>
+                <span className={`chip${f.kind === "tender" ? " gold" : ""}`}>{t(`k_${f.kind}` as Key)}</span>
+                <span className="fmain">
+                  {url ? <a href={url} target="_blank" rel="noopener noreferrer">{f.title}</a> : f.title}
+                  <span className="am">
+                    {forDoc ? `${forDoc.label} · ` : ""}
+                    {f.size_bytes ? `${(f.size_bytes / 1048576).toFixed(1)} MB · ` : ""}
+                    {fmtDate(f.created_at, lang)}
+                  </span>
+                </span>
+                {edit && (
+                  <form action={deleteTenderFile} className="inline-form">
+                    <input type="hidden" name="id" value={x.id} />
+                    <input type="hidden" name="file" value={f.id} />
+                    <button className="xbtn" type="submit" aria-label={t("remove")}>×</button>
+                  </form>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="empty">{t("files_none")}</p>
+      )}
+      {edit && <FileUpload orgId={orgId} tenderId={x.id} docs={docs.filter((d) => d.status !== "na").map((d) => ({ id: d.id, label: d.label }))} L={L} />}
+    </section>
     <section className="sec">
       <h3>
         {t("docs_h")} <span className={`chip ${done === counted.length && counted.length ? "ok" : ""}`}>{done} / {counted.length}</span>
@@ -457,7 +509,11 @@ async function DocsTab({ x, docs, edit, t, orgId }: { x: Tender; docs: TDoc[]; e
                 <option value="na">{t("ds_na")}</option>
               </select>
               <span style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-                <span className="dl">{d.label}</span>
+                <span className="dl">
+                  {d.label}
+                  {d.page ? <span className="am"> · {t("ai_page")} {d.page}</span> : null}
+                  {filesFor(d.id).length > 0 && <span className="chip ok" style={{ marginLeft: 6 }}>📎 {filesFor(d.id).length}</span>}
+                </span>
                 <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   <input className="mini" style={{ flex: "1 1 140px" }} name="section" defaultValue={d.section ?? ""} placeholder={t("section")} aria-label={t("section")} />
                   <input className="mini" style={{ flex: "2 1 180px" }} name="note" defaultValue={d.note ?? ""} placeholder={t("f_notes")} aria-label={t("f_notes")} />
@@ -496,6 +552,7 @@ async function DocsTab({ x, docs, edit, t, orgId }: { x: Tender; docs: TDoc[]; e
         </div>
       )}
     </section>
+    </>
   );
 }
 

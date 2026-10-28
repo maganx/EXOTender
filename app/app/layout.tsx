@@ -5,13 +5,14 @@ import { Logo } from "@/components/Logo";
 import { NavLinks } from "@/components/NavLinks";
 import { OrgSwitch } from "@/components/OrgSwitch";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
-import { canEdit } from "@/lib/domain";
+import { canEdit, canEditPayments, fmtDate } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();
-  const { t } = (await getT());
+  const { t, lang } = await getT();
+  const daysLeft = ctx.sub.endsAt ? Math.ceil((Date.parse(ctx.sub.endsAt) - Date.now()) / 86400000) : null;
   return (
     <>
       <header className="band">
@@ -33,6 +34,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               { href: "/app/nest", label: t("nav_nest") },
               { href: "/app/documents", label: t("nav_docs") },
               { href: "/app/team", label: t("nav_team") },
+              ...(canEditPayments(ctx.role) ? [{ href: "/app/billing", label: t("nav_billing") }] : []),
+              ...(ctx.platformAdmin ? [{ href: "/app/admin", label: t("nav_admin") }] : []),
             ]}
           />
           <div className="tools">
@@ -51,7 +54,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
-      <main className="wrap page">{children}</main>
+      <main className="wrap page">
+        {daysLeft != null && daysLeft <= 5 && (
+          <div className={`subbar${ctx.sub.active ? "" : " bad"}`}>
+            <span>{ctx.sub.active ? t("bill_soon", { n: Math.max(0, daysLeft) }) : t("bill_expired", { d: fmtDate(ctx.sub.endsAt, lang) })}</span>
+            {canEditPayments(ctx.role) && (
+              <Link className="btn sm gold" href="/app/billing">{t("bill_payNow")}</Link>
+            )}
+          </div>
+        )}
+        {children}
+      </main>
     </>
   );
 }

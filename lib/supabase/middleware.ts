@@ -4,6 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC = ["/login", "/auth", "/invite"];
 
 export async function updateSession(request: NextRequest) {
+  // pages read the path to decide what an expired subscription may still open
+  request.headers.set("x-path", request.nextUrl.pathname);
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "./supabase/server";
 import type { Contract, Role, Summary, Tender } from "./domain";
@@ -10,7 +10,39 @@ export type OrgCtx = {
   orgName: string;
   role: Role;
   orgs: { id: string; name: string; role: Role }[];
+  sub: Subscription;
+  platformAdmin: boolean;
 };
+
+export type Subscription = {
+  plan: string;
+  trialEndsAt: string | null;
+  paidUntil: string | null;
+  /** end of the time the company may use the app; null before billing is set up */
+  endsAt: string | null;
+  active: boolean;
+  trial: boolean;
+};
+
+type OrgEmbed = { name: string; plan?: string; trial_ends_at?: string | null; paid_until?: string | null };
+
+function subscription(o: OrgEmbed | null): Subscription {
+  const trialEndsAt = o?.trial_ends_at ?? null;
+  const paidUntil = o?.paid_until ?? null;
+  if (!trialEndsAt) return { plan: o?.plan ?? "trial", trialEndsAt, paidUntil, endsAt: null, active: true, trial: false };
+  const ends = Math.max(Date.parse(trialEndsAt), paidUntil ? Date.parse(paidUntil) : 0);
+  return {
+    plan: o?.plan ?? "trial",
+    trialEndsAt,
+    paidUntil,
+    endsAt: new Date(ends).toISOString(),
+    active: ends > Date.now(),
+    trial: !paidUntil || Date.parse(paidUntil) < Date.parse(trialEndsAt),
+  };
+}
+
+// pages an expired company can still open
+const OPEN_WHEN_EXPIRED = ["/app/billing", "/app/admin"];
 
 /** Signed-in user and the company they are working in; redirects when either is missing. */
 export async function requireOrg(): Promise<OrgCtx> {
@@ -20,20 +52,37 @@ export async function requireOrg(): Promise<OrgCtx> {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data } = await supabase
+  type Row = { org_id: string; role: string; organizations: unknown };
+  const res = await supabase
     .from("memberships")
-    .select("org_id, role, organizations(name)")
+    .select("org_id, role, organizations(name, plan, trial_ends_at, paid_until)")
     .eq("user_id", user.id);
-  const orgs = (data ?? []).map((m) => ({
-    id: m.org_id as string,
-    role: m.role as Role,
-    name: one<{ name: string }>(m.organizations)?.name ?? "—",
-  }));
+  let rows: Row[] | null = res.data;
+  // database without the billing columns yet (0002 not run): carry on without billing
+  if (res.error) rows = (await supabase.from("memberships").select("org_id, role, organizations(name, plan)").eq("user_id", user.id)).data;
+  const orgs = (rows ?? []).map((m) => {
+    const o = one<OrgEmbed>(m.organizations);
+    return { id: m.org_id as string, role: m.role as Role, name: o?.name ?? "—", sub: subscription(o) };
+  });
   if (!orgs.length) redirect("/onboarding");
 
   const wanted = (await cookies()).get("org")?.value;
   const cur = orgs.find((o) => o.id === wanted) ?? orgs[0];
-  return { userId: user.id, email: user.email ?? "", orgId: cur.id, orgName: cur.name, role: cur.role, orgs };
+  const { data: pa } = await supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle();
+
+  const path = (await headers()).get("x-path") ?? "";
+  if (!cur.sub.active && !OPEN_WHEN_EXPIRED.some((p) => path.startsWith(p))) redirect("/app/billing");
+
+  return {
+    userId: user.id,
+    email: user.email ?? "",
+    orgId: cur.id,
+    orgName: cur.name,
+    role: cur.role,
+    orgs: orgs.map(({ id, name, role }) => ({ id, name, role })),
+    sub: cur.sub,
+    platformAdmin: !!pa,
+  };
 }
 
 /** PostgREST returns one-to-one embeds as an object or a one-item array depending on detection. */

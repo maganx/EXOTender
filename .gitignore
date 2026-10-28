@@ -7,3 +7,4 @@ next-env.d.ts
 .open-next
 .wrangler
 .dev.vars
+public/pdf.worker.min.mjs
