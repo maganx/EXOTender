@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/org";
 import { STD_DOCS, fromLocalInput } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
-import type { NestTender } from "@/lib/nest";
+import { fetchPublished, type NestTender } from "@/lib/nest";
 
 const NEST_PAGE = "https://nest.go.tz/tenders/published-tenders?category=ALL";
 
@@ -31,17 +31,14 @@ export async function addFromNest(fd: FormData) {
   const ctx = await requireOrg();
   const { t, lang } = await getT();
   const supabase = await createClient();
-  const picked = fd
-    .getAll("pick")
-    .map((v) => {
-      try {
-        return JSON.parse(String(v)) as NestTender;
-      } catch {
-        return null;
-      }
-    })
-    .filter((x): x is NestTender => !!x && typeof x.no === "string" && typeof x.title === "string")
-    .slice(0, 50);
+  // Only tender numbers come from the browser; the details are read from NeST again.
+  const nos = new Set(fd.getAll("pick").map(String).slice(0, 50));
+  let picked: NestTender[];
+  try {
+    picked = (await fetchPublished()).filter((x) => nos.has(x.no));
+  } catch {
+    redirect(`/app/nest?msg=${encodeURIComponent(t("nest_fail"))}`);
+  }
 
   let added = 0;
   for (const x of picked) {

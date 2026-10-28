@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { getLang } from "@/lib/i18n";
+import { getLang, getTheme } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={(await getLang())}>
+    <html lang={await getLang()} data-theme={await getTheme()}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

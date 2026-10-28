@@ -4,6 +4,7 @@ import { LangSwitch } from "@/components/LangSwitch";
 import { Logo } from "@/components/Logo";
 import { NavLinks } from "@/components/NavLinks";
 import { OrgSwitch } from "@/components/OrgSwitch";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { canEdit } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
@@ -36,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
           <div className="tools">
             <LangSwitch back="/app" />
+            <ThemeSwitch back="/app" />
             {canEdit(ctx.role) && (
               <Link className="btn gold" href="/app/tenders/new">
                 + {t("newT")}

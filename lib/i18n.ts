@@ -237,6 +237,14 @@ const W = {
   nest_fail: ["Imeshindikana kufungua NeST sasa hivi. Jaribu tena baadaye.", "Could not reach NeST right now. Try again later."],
   nest_done: ["Tenda {n} zimeongezwa", "{n} tenders added"],
   nest_fromNest: ["Imeongezwa kutoka NeST", "Added from NeST"],
+  nest_search: ["Tafuta kwa jina, namba au taasisi", "Search by title, number or entity"],
+  nest_go: ["Tafuta", "Search"],
+  nest_pages: ["Kurasa", "Pages"],
+  nest_prev: ["Nyuma", "Previous"],
+  nest_next: ["Mbele", "Next"],
+  nest_pageOf: ["Ukurasa {p} kati ya {n}", "Page {p} of {n}"],
+  theme_light: ["Mwanga", "Light"],
+  theme_dark: ["Giza", "Dark"],
   lots: ["Lots", "Lots"],
 } as const satisfies Record<string, readonly [string, string]>;
 
@@ -244,6 +252,11 @@ export type Key = keyof typeof W;
 
 export async function getLang(): Promise<Lang> {
   return (await cookies()).get("lang")?.value === "en" ? "en" : "sw";
+}
+
+/** Light unless the person picked dark. */
+export async function getTheme(): Promise<"light" | "dark"> {
+  return (await cookies()).get("theme")?.value === "dark" ? "dark" : "light";
 }
 
 export function translator(lang: Lang) {

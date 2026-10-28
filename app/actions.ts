@@ -67,6 +67,11 @@ export async function setLang(formData: FormData) {
   redirect(safeNext(formData.get("back")));
 }
 
+export async function setTheme(formData: FormData) {
+  (await cookies()).set("theme", formData.get("theme") === "dark" ? "dark" : "light", { path: "/", maxAge: 60 * 60 * 24 * 365 });
+  redirect(safeNext(formData.get("back")));
+}
+
 export async function switchOrg(formData: FormData) {
   (await cookies()).set("org", String(formData.get("org") ?? ""), { path: "/", maxAge: 60 * 60 * 24 * 365 });
   redirect("/app");

@@ -258,3 +258,26 @@ a.btn{text-decoration:none}
 .role-list b{font-family:var(--display);color:var(--navy)}
 .copy{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;background:var(--surface-2);border-radius:6px;padding:6px 8px;user-select:all}
 details.danger summary{cursor:pointer;color:var(--bad);font-weight:600;font-size:13px}
+
+/* NeST list: one card per tender, wraps at any width */
+details.sec summary.sum{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--navy)}
+.nest-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.nest-list{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.nest-list li+li{border-top:1px solid var(--line)}
+.nest-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 14px;cursor:pointer}
+.nest-item:hover{background:var(--surface-2)}
+.nest-item.done{cursor:default;opacity:.75}
+.nest-item input{margin-top:4px;width:17px;height:17px;accent-color:var(--gold)}
+.nest-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.nest-title{font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.nest-main .am{white-space:normal}
+.nest-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.nest-due{display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:8px}
+@media (max-width:640px){
+  .nest-item{grid-template-columns:auto minmax(0,1fr);padding:12px}
+  .nest-due{grid-column:2;flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:wrap}
+}
+.nav{min-width:0;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+@media (max-width:640px){.nav a{flex:0 0 auto;padding:7px 10px}}

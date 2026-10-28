@@ -59,17 +59,33 @@ async function page(n: number) {
     }),
   });
   if (!res.ok) throw new Error(`NeST ${res.status}`);
-  const json = (await res.json()) as { data?: { items?: { hasNext: boolean; rows: Row[] } } };
+  const json = (await res.json()) as { data?: { items?: { totalPages: number | null; hasNext: boolean; rows: Row[] } } };
   const items = json.data?.items;
   if (!items) throw new Error("NeST: unexpected response");
   return items;
 }
 
+// NeST changes a few times a day, so one fetch is reused for a while by every
+// company served from the same worker instead of paging NeST on each visit.
+// Only the finished list is kept: Workers cannot share pending I/O between requests.
+const TTL = 10 * 60 * 1000;
+let cached: { at: number; list: NestTender[] } | null = null;
+
 /** Every published tender, one entry per tender number (lots collapsed). */
-export async function fetchPublished(maxPages = 6): Promise<NestTender[]> {
+export async function fetchPublished(): Promise<NestTender[]> {
+  if (cached && Date.now() - cached.at < TTL) return cached.list;
+  const list = await load();
+  cached = { at: Date.now(), list };
+  return list;
+}
+
+async function load(maxPages = 6): Promise<NestTender[]> {
+  const first = await page(1);
+  const rest = await Promise.all(
+    Array.from({ length: Math.min(first.totalPages ?? (first.hasNext ? maxPages : 1), maxPages) - 1 }, (_, i) => page(i + 2)),
+  );
   const seen = new Map<string, NestTender>();
-  for (let n = 1; n <= maxPages; n++) {
-    const { rows, hasNext } = await page(n);
+  for (const { rows } of [first, ...rest]) {
     for (const r of rows) {
       const no = r.entityNumber?.trim();
       if (!no || seen.has(no)) continue;
@@ -85,7 +101,6 @@ export async function fetchPublished(maxPages = 6): Promise<NestTender[]> {
         reference: r.referenceNumber,
       });
     }
-    if (!hasNext) break;
   }
   return [...seen.values()];
 }
