@@ -1,8 +1,8 @@
 import { setLang } from "@/app/actions";
 import { getLang } from "@/lib/i18n";
 
-export function LangSwitch({ back }: { back: string }) {
-  const lang = getLang();
+export async function LangSwitch({ back }: { back: string }) {
+  const lang = (await getLang());
   return (
     <form action={setLang} className="inline-form">
       <input type="hidden" name="lang" value={lang === "sw" ? "en" : "sw"} />

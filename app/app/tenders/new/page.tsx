@@ -5,10 +5,11 @@ import { canEdit } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 
-export default async function NewTender({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+export default async function NewTender(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
   const ctx = await requireOrg();
   if (!canEdit(ctx.role)) redirect("/app/tenders");
-  const { t } = getT();
+  const { t } = (await getT());
   return (
     <>
       <div className="view-head">
@@ -61,5 +62,3 @@ export default async function NewTender({ searchParams }: { searchParams: Record
     </>
   );
 }
-
-export const runtime = "edge";

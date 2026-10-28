@@ -4,9 +4,10 @@ import { ACTIVE, canSeeMoney, fmtDate, money, nextAction } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { loadTenders, requireOrg } from "@/lib/org";
 
-export default async function TenderList({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+export default async function TenderList(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
   const ctx = await requireOrg();
-  const { t, lang } = getT();
+  const { t, lang } = (await getT());
   const q = (searchParams.q ?? "").trim().toLowerCase();
   const f = searchParams.f ?? "open";
   const isActive = (s: string) => (ACTIVE as readonly string[]).includes(s);
@@ -93,5 +94,3 @@ export default async function TenderList({ searchParams }: { searchParams: Recor
     </>
   );
 }
-
-export const runtime = "edge";

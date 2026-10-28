@@ -2,7 +2,7 @@
 
 Mfumo wa kusimamia tenda za serikali (NeST) kwa makampuni mengi: kutoka tenda kuonekana, maandalizi ya nyaraka, bei, tuzo, mkataba, usambazaji hadi malipo.
 
-Multi-company tender management for Tanzanian government tenders (NeST), built with Next.js 14 and Supabase.
+Multi-company tender management for Tanzanian government tenders (NeST), built with Next.js 16 and Supabase, hosted on Cloudflare Workers via OpenNext.
 
 ## Nini kimo / What's inside
 
@@ -18,17 +18,15 @@ Multi-company tender management for Tanzanian government tenders (NeST), built w
 
 1. **Database (Supabase):** Supabase dashboard → SQL Editor → bandika yaliyomo kwenye `supabase/migrations/0001_init.sql` → Run.
 2. **Auth:** Supabase → Authentication → URL Configuration → weka `Site URL` kuwa anwani ya tovuti (mfano `https://tenda-desk.netlify.app`) na ongeza `https://<anwani>/auth/callback` kwenye Redirect URLs.
-3. **Hosting (Cloudflare Pages):** Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → chagua repository hii, kisha:
-   - Framework preset: `Next.js`
-   - Build command: `npx @cloudflare/next-on-pages@1.13.12`
-   - Build output directory: `.vercel/output/static`
-   - Environment variables (Production):
+3. **Hosting (Cloudflare Workers):** Cloudflare dashboard → Workers & Pages → Create → Import a repository → chagua repository hii, kisha:
+   - Build command: `npx opennextjs-cloudflare build`
+   - Deploy command: `npx opennextjs-cloudflare deploy`
+   - Build variables / Variables and secrets (zote mbili, build na runtime):
      - `NEXT_PUBLIC_SUPABASE_URL` = `https://hyizioycuwifddtrzbri.supabase.co`
      - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase → Project Settings → API → `anon public` key
-     - `NEXT_PUBLIC_SITE_URL` = anwani ya tovuti (mfano `https://exotender.pages.dev`)
-   - Baada ya deploy ya kwanza: Settings → Functions → Compatibility flags → ongeza `nodejs_compat` (Production na Preview), kisha **Retry deployment**. (`wrangler.toml` tayari ina flag hii.)
+     - `NEXT_PUBLIC_SITE_URL` = anwani ya tovuti (mfano `https://exotender.<account>.workers.dev`)
 
-   Kujaribu kwenye kompyuta: `npm run pages:build && npx wrangler pages dev .vercel/output/static`
+   `wrangler.jsonc` na `open-next.config.ts` tayari zimewekwa. Kujaribu kwenye kompyuta: `npm run preview`.
 
 4. Fungua tovuti, bonyeza **Fungua akaunti**, thibitisha barua pepe, kisha sajili kampuni yako. Wewe utakuwa Mmiliki.
 

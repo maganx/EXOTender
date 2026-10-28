@@ -54,10 +54,12 @@ function SaveBar({ t }: { t: T }) {
   );
 }
 
-export default async function TenderPage({ params, searchParams }: { params: { id: string }; searchParams: Record<string, string | undefined> }) {
+export default async function TenderPage(props: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const ctx = await requireOrg();
-  const { t, lang } = getT();
-  const supabase = createClient();
+  const { t, lang } = (await getT());
+  const supabase = (await createClient());
   const tab: Tab = (TABS as readonly string[]).includes(searchParams.tab ?? "") ? (searchParams.tab as Tab) : "info";
 
   const { data: row } = await supabase
@@ -433,7 +435,7 @@ function PriceStats({ p, t }: { p: Pricing | null; t: T }) {
 }
 
 async function DocsTab({ x, docs, edit, t, orgId }: { x: Tender; docs: TDoc[]; edit: boolean; t: T; orgId: string }) {
-  const { data: vault } = await createClient().from("company_documents").select("id, title, kind, expires_on").eq("org_id", orgId).order("title");
+  const { data: vault } = await (await createClient()).from("company_documents").select("id, title, kind, expires_on").eq("org_id", orgId).order("title");
   const counted = docs.filter((d) => d.status !== "na");
   const done = counted.filter((d) => d.status === "done").length;
   return (
@@ -498,7 +500,7 @@ async function DocsTab({ x, docs, edit, t, orgId }: { x: Tender; docs: TDoc[]; e
 }
 
 async function LogTab({ id, canWrite, t, lang }: { id: string; canWrite: boolean; t: T; lang: "sw" | "en" }) {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const { data: log } = await supabase.from("activity_log").select("id, at, text, user_id").eq("tender_id", id).order("at", { ascending: false }).limit(200);
   const ids = Array.from(new Set((log ?? []).map((l) => l.user_id).filter(Boolean))) as string[];
   const { data: people } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] };
@@ -533,5 +535,3 @@ async function LogTab({ id, canWrite, t, lang }: { id: string; canWrite: boolean
     </>
   );
 }
-
-export const runtime = "edge";

@@ -223,8 +223,8 @@ const W = {
 
 export type Key = keyof typeof W;
 
-export function getLang(): Lang {
-  return cookies().get("lang")?.value === "en" ? "en" : "sw";
+export async function getLang(): Promise<Lang> {
+  return (await cookies()).get("lang")?.value === "en" ? "en" : "sw";
 }
 
 export function translator(lang: Lang) {
@@ -237,7 +237,7 @@ export function translator(lang: Lang) {
 
 export type T = ReturnType<typeof translator>;
 
-export function getT() {
-  const lang = getLang();
+export async function getT() {
+  const lang = await getLang();
   return { lang, t: translator(lang) };
 }

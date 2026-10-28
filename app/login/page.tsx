@@ -3,8 +3,9 @@ import { signIn, signUp } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
 import { getT } from "@/lib/i18n";
 
-export default function LoginPage({ searchParams }: { searchParams: Record<string, string | undefined> }) {
-  const { t } = getT();
+export default async function LoginPage(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
+  const { t } = (await getT());
   const signup = searchParams.mode === "signup";
   const next = searchParams.next ?? "/app";
   const q = (m?: string) => `/login?${m ? "mode=" + m + "&" : ""}next=${encodeURIComponent(next)}`;
@@ -41,5 +42,3 @@ export default function LoginPage({ searchParams }: { searchParams: Record<strin
     </AuthShell>
   );
 }
-
-export const runtime = "edge";

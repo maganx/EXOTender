@@ -5,10 +5,11 @@ import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function TeamPage({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+export default async function TeamPage(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
   const ctx = await requireOrg();
-  const { t, lang } = getT();
-  const supabase = createClient();
+  const { t, lang } = (await getT());
+  const supabase = (await createClient());
   const admin = isAdmin(ctx.role);
   const { data: members } = await supabase.from("memberships").select("user_id, role, created_at").eq("org_id", ctx.orgId);
   const ids = (members ?? []).map((m) => m.user_id);
@@ -16,7 +17,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Record<
   const { data: invites } = admin
     ? await supabase.from("invitations").select("id, email, role, token, expires_at").eq("org_id", ctx.orgId).is("accepted_at", null).order("created_at", { ascending: false })
     : { data: [] };
-  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${headers().get("host")}`;
+  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
   const assignable = ROLES.filter((r) => r !== "owner" || ctx.role === "owner");
 
   return (
@@ -127,5 +128,3 @@ export default async function TeamPage({ searchParams }: { searchParams: Record<
     </>
   );
 }
-
-export const runtime = "edge";

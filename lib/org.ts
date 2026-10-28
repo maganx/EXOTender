@@ -14,7 +14,7 @@ export type OrgCtx = {
 
 /** Signed-in user and the company they are working in; redirects when either is missing. */
 export async function requireOrg(): Promise<OrgCtx> {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -31,7 +31,7 @@ export async function requireOrg(): Promise<OrgCtx> {
   }));
   if (!orgs.length) redirect("/onboarding");
 
-  const wanted = cookies().get("org")?.value;
+  const wanted = (await cookies()).get("org")?.value;
   const cur = orgs.find((o) => o.id === wanted) ?? orgs[0];
   return { userId: user.id, email: user.email ?? "", orgId: cur.id, orgName: cur.name, role: cur.role, orgs };
 }
@@ -46,7 +46,7 @@ export type TenderRow = Tender & { summary: Summary };
 
 /** Tenders of the current company with what the lists need to compute next steps. */
 export async function loadTenders(orgId: string): Promise<TenderRow[]> {
-  const supabase = createClient();
+  const supabase = (await createClient());
   const { data, error } = await supabase
     .from("tenders")
     .select("*, tender_documents(status), deliveries(status), invoices(amount, paid), tender_contracts(*), tender_pricing(bid_price)")

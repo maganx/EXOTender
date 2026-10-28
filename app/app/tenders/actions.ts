@@ -22,13 +22,13 @@ function safeUrl(v: FormDataEntryValue | null) {
 
 async function log(tenderId: string, text: string) {
   const ctx = await requireOrg();
-  await createClient().from("activity_log").insert({ tender_id: tenderId, user_id: ctx.userId, text });
+  await (await createClient()).from("activity_log").insert({ tender_id: tenderId, user_id: ctx.userId, text });
 }
 
 export async function createTender(fd: FormData) {
   const ctx = await requireOrg();
-  const { t } = getT();
-  const supabase = createClient();
+  const { t, lang } = await getT();
+  const supabase = (await createClient());
   const { data, error } = await supabase
     .from("tenders")
     .insert({
@@ -45,7 +45,7 @@ export async function createTender(fd: FormData) {
     .single();
   if (error || !data) redirect(`/app/tenders/new?msg=${encodeURIComponent(error?.message ?? "error")}`);
   await supabase.from("tender_documents").insert(
-    STD_DOCS.map(([k, sw, en], i) => ({ tender_id: data.id, std_key: k, label: getT().lang === "sw" ? sw : en, sort: i })),
+    STD_DOCS.map(([k, sw, en], i) => ({ tender_id: data.id, std_key: k, label: lang === "sw" ? sw : en, sort: i })),
   );
   await log(data.id, t("created"));
   back(data.id, "info");
@@ -53,7 +53,7 @@ export async function createTender(fd: FormData) {
 
 export async function saveInfo(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("tenders")
     .update({
       tender_no: str(fd.get("tender_no")),
@@ -81,15 +81,15 @@ export async function setStage(fd: FormData) {
   const id = String(fd.get("id"));
   const stage = String(fd.get("stage")) as Stage;
   if (![...STAGES, "lost"].includes(stage)) back(id, String(fd.get("tab") ?? "info"), "bad stage");
-  const { t } = getT();
-  const { error } = await createClient().from("tenders").update({ stage }).eq("id", id);
+  const { t } = (await getT());
+  const { error } = await (await createClient()).from("tenders").update({ stage }).eq("id", id);
   if (!error) await log(id, `${t("stageMoved")} ${t(`s_${stage}`)}`);
   back(id, String(fd.get("tab") ?? "info"), error?.message);
 }
 
 export async function deleteTender(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient().from("tenders").delete().eq("id", id);
+  const { error } = await (await createClient()).from("tenders").delete().eq("id", id);
   if (error) back(id, "info", error.message);
   revalidatePath("/app", "layout");
   redirect("/app/tenders");
@@ -100,7 +100,7 @@ export async function addDoc(fd: FormData) {
   const id = String(fd.get("id"));
   const label = str(fd.get("label"));
   if (!label) back(id, "docs");
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("tender_documents")
     .insert({ tender_id: id, label, section: str(fd.get("section")), note: str(fd.get("note")), sort: 100 });
   back(id, "docs", error?.message);
@@ -108,8 +108,8 @@ export async function addDoc(fd: FormData) {
 
 export async function addStdDocs(fd: FormData) {
   const id = String(fd.get("id"));
-  const { lang } = getT();
-  const supabase = createClient();
+  const { lang } = (await getT());
+  const supabase = (await createClient());
   const { data: have } = await supabase.from("tender_documents").select("std_key").eq("tender_id", id);
   const got = new Set((have ?? []).map((d) => d.std_key));
   const rows = STD_DOCS.filter(([k]) => !got.has(k)).map(([k, sw, en], i) => ({ tender_id: id, std_key: k, label: lang === "sw" ? sw : en, sort: i }));
@@ -122,10 +122,10 @@ export async function saveDoc(fd: FormData) {
   const status = String(fd.get("status"));
   const docId = String(fd.get("doc_id"));
   if (fd.get("remove")) {
-    const { error } = await createClient().from("tender_documents").delete().eq("id", docId).eq("tender_id", id);
+    const { error } = await (await createClient()).from("tender_documents").delete().eq("id", docId).eq("tender_id", id);
     back(id, "docs", error?.message);
   }
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("tender_documents")
     .update({
       status: DOC_STATUS.includes(status) ? status : "pending",
@@ -141,7 +141,7 @@ export async function saveDoc(fd: FormData) {
 /* ---------- pricing ---------- */
 export async function savePricing(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("tender_pricing")
     .upsert({
       tender_id: id,
@@ -156,7 +156,7 @@ export async function savePricing(fd: FormData) {
 /* ---------- award & contract ---------- */
 export async function saveContract(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("tender_contracts")
     .upsert({
       tender_id: id,
@@ -180,14 +180,14 @@ export async function saveContract(fd: FormData) {
 /* ---------- deliveries ---------- */
 export async function addDelivery(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient().from("deliveries").insert({ tender_id: id, item: str(fd.get("item")) ?? "" });
+  const { error } = await (await createClient()).from("deliveries").insert({ tender_id: id, item: str(fd.get("item")) ?? "" });
   back(id, "supply", error?.message);
 }
 
 export async function saveDelivery(fd: FormData) {
   const id = String(fd.get("id"));
   const rowId = String(fd.get("row_id"));
-  const supabase = createClient();
+  const supabase = (await createClient());
   if (fd.get("remove")) {
     const { error } = await supabase.from("deliveries").delete().eq("id", rowId).eq("tender_id", id);
     back(id, "supply", error?.message);
@@ -210,7 +210,7 @@ export async function saveDelivery(fd: FormData) {
 /* ---------- invoices ---------- */
 export async function addInvoice(fd: FormData) {
   const id = String(fd.get("id"));
-  const { error } = await createClient()
+  const { error } = await (await createClient())
     .from("invoices")
     .insert({ tender_id: id, invoice_no: str(fd.get("invoice_no")), amount: num(fd.get("amount")) ?? 0 });
   back(id, "pay", error?.message);
@@ -219,7 +219,7 @@ export async function addInvoice(fd: FormData) {
 export async function saveInvoice(fd: FormData) {
   const id = String(fd.get("id"));
   const rowId = String(fd.get("row_id"));
-  const supabase = createClient();
+  const supabase = (await createClient());
   if (fd.get("remove")) {
     const { error } = await supabase.from("invoices").delete().eq("id", rowId).eq("tender_id", id);
     back(id, "pay", error?.message);

@@ -7,8 +7,6 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const nextParam = url.searchParams.get("next") ?? "/app";
   const next = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/app";
-  if (code) await createClient().auth.exchangeCodeForSession(code);
+  if (code) await (await createClient()).auth.exchangeCodeForSession(code);
   return NextResponse.redirect(new URL(next, url.origin));
 }
-
-export const runtime = "edge";

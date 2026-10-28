@@ -20,7 +20,7 @@ export async function uploadDoc(fd: FormData) {
   if (file.size > MAX) back("max 10 MB");
   const safe = file.name.replace(/[^A-Za-z0-9._-]+/g, "_").slice(-80);
   const path = `${ctx.orgId}/${crypto.randomUUID()}-${safe}`;
-  const supabase = createClient();
+  const supabase = (await createClient());
   const up = await supabase.storage.from("company-docs").upload(path, file, { contentType: file.type || "application/octet-stream" });
   if (up.error) back(up.error.message);
   const { error } = await supabase.from("company_documents").insert({
@@ -37,7 +37,7 @@ export async function uploadDoc(fd: FormData) {
 
 export async function deleteDoc(fd: FormData) {
   const ctx = await requireOrg();
-  const supabase = createClient();
+  const supabase = (await createClient());
   const { data } = await supabase.from("company_documents").select("storage_path").eq("id", String(fd.get("doc"))).eq("org_id", ctx.orgId).maybeSingle();
   if (!data) back();
   const { error } = await supabase.from("company_documents").delete().eq("id", String(fd.get("doc"))).eq("org_id", ctx.orgId);

@@ -4,11 +4,13 @@ import { AuthShell } from "@/components/AuthShell";
 import { getT } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function InvitePage({ params, searchParams }: { params: { token: string }; searchParams: Record<string, string | undefined> }) {
-  const { t } = getT();
+export default async function InvitePage(props: { params: Promise<{ token: string }>; searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
+  const { t } = (await getT());
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = await (await createClient()).auth.getUser();
   const here = `/invite/${encodeURIComponent(params.token)}`;
   if (!user) redirect(`/login?mode=signup&next=${encodeURIComponent(here)}`);
   return (
@@ -25,5 +27,3 @@ export default async function InvitePage({ params, searchParams }: { params: { t
     </AuthShell>
   );
 }
-
-export const runtime = "edge";

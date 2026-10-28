@@ -2,8 +2,9 @@ import { createOrganization } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
 import { getT } from "@/lib/i18n";
 
-export default function Onboarding({ searchParams }: { searchParams: Record<string, string | undefined> }) {
-  const { t } = getT();
+export default async function Onboarding(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
+  const { t } = (await getT());
   return (
     <AuthShell back="/onboarding">
       <h1>{t("onb_t")}</h1>
@@ -25,5 +26,3 @@ export default function Onboarding({ searchParams }: { searchParams: Record<stri
     </AuthShell>
   );
 }
-
-export const runtime = "edge";

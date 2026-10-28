@@ -8,7 +8,7 @@ const has = (list: readonly string[], s: string) => list.includes(s);
 
 export default async function Overview() {
   const ctx = await requireOrg();
-  const { t, lang } = getT();
+  const { t, lang } = (await getT());
   const all = await loadTenders(ctx.orgId);
   const money_ = canSeeMoney(ctx.role);
 
@@ -104,5 +104,3 @@ export default async function Overview() {
     </>
   );
 }
-
-export const runtime = "edge";

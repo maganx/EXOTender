@@ -10,7 +10,7 @@ import { requireOrg } from "@/lib/org";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();
-  const { t } = getT();
+  const { t } = (await getT());
   return (
     <>
       <header className="band">

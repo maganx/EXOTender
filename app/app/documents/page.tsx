@@ -4,10 +4,11 @@ import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function Vault({ searchParams }: { searchParams: Record<string, string | undefined> }) {
+export default async function Vault(props: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const searchParams = await props.searchParams;
   const ctx = await requireOrg();
-  const { t, lang } = getT();
-  const supabase = createClient();
+  const { t, lang } = (await getT());
+  const supabase = (await createClient());
   const edit = canEdit(ctx.role);
   const { data: docs } = await supabase.from("company_documents").select("*").eq("org_id", ctx.orgId).order("kind");
   const signed = docs?.length
@@ -107,5 +108,3 @@ export default async function Vault({ searchParams }: { searchParams: Record<str
     </>
   );
 }
-
-export const runtime = "edge";
