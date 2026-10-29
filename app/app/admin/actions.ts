@@ -36,12 +36,25 @@ export async function extendCompany(fd: FormData) {
   back(error?.message);
 }
 
+/** Keeps a payment link only when it is a plain https address, so the Billing button can't point anywhere odd. */
+function payLink(raw: string) {
+  const s = raw.trim();
+  if (!s) return "";
+  try {
+    const u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
+    return u.protocol === "https:" ? u.toString().slice(0, 500) : "";
+  } catch {
+    return "";
+  }
+}
+
 export async function savePayInfo(fd: FormData) {
   const supabase = await admin();
   const { error } = await supabase.from("platform_settings").upsert([
     { key: "pay_instructions", value: String(fd.get("value") ?? "").slice(0, 2000) },
     { key: "lipa_number", value: String(fd.get("lipa_number") ?? "").replace(/[^0-9 ]/g, "").trim().slice(0, 20) },
     { key: "lipa_name", value: String(fd.get("lipa_name") ?? "").trim().slice(0, 80) },
+    { key: "pay_link", value: payLink(String(fd.get("pay_link") ?? "")) },
   ]);
   back(error?.message);
 }

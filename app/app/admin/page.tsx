@@ -17,7 +17,7 @@ export default async function Admin(props: { searchParams: Promise<Record<string
     // Selcom payments settle themselves from Selcom's answer, so only manual reports wait here
     supabase.from("payments").select("*, organizations(name)").eq("status", "pending").neq("method", "selcom").order("created_at"),
     supabase.rpc("platform_companies"),
-    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name"]),
+    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name", "pay_link"]),
     supabase.rpc("gateway_ready"),
   ]);
   const setting = (k: string) => (info ?? []).find((r) => r.key === k)?.value ?? "";
@@ -114,6 +114,11 @@ export default async function Admin(props: { searchParams: Promise<Record<string
             <label htmlFor="lipa_name">{t("adm_lipaName")}</label>
             <input id="lipa_name" name="lipa_name" defaultValue={setting("lipa_name")} placeholder="EXO GLOBAL COMPANY LIMITED" />
           </div>
+        </div>
+        <div className="fld" style={{ marginTop: 10 }}>
+          <label htmlFor="pay_link">{t("adm_payLink")}</label>
+          <input id="pay_link" name="pay_link" inputMode="url" autoComplete="off" defaultValue={setting("pay_link")} placeholder="https://..." />
+          <small className="hint" style={{ display: "block", margin: "4px 0 0" }}>{t("adm_payLinkHint")}</small>
         </div>
         <div className="fld">
           <label htmlFor="payinfo">{t("adm_payinfo")}</label>

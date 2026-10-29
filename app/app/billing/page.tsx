@@ -15,7 +15,7 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
   const canPay = canEditPayments(ctx.role);
   const [{ data: plans, error }, { data: info }, { data: pays }, { data: gateway }] = await Promise.all([
     supabase.from("plans").select("*").eq("active", true).order("sort"),
-    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name"]),
+    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name", "pay_link"]),
     supabase.from("payments").select("*").eq("org_id", ctx.orgId).order("created_at", { ascending: false }).limit(20),
     supabase.rpc("gateway_ready"),
   ]);
@@ -26,6 +26,7 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
       ) : undefined;
   const setting = (k: string) => (info ?? []).find((r) => r.key === k)?.value ?? "";
   const lipa = setting("lipa_number");
+  const payLink = setting("pay_link");
   const sub = ctx.sub;
   const daysLeft = sub.endsAt ? Math.ceil((Date.parse(sub.endsAt) - Date.now()) / 86400000) : null;
 
@@ -123,6 +124,15 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
                   <li>{t("lipa_2", { n: lipa })}</li>
                   <li>{t("lipa_3")}</li>
                 </ol>
+              </div>
+            )}
+            {payLink && (
+              <div className="lipa">
+                <span className="lipa-k">{t("plink_t")}</span>
+                <p style={{ margin: "4px 0 10px", fontSize: 14 }}>{t("plink_1")}</p>
+                <a className="btn gold" href={payLink} target="_blank" rel="noopener noreferrer" style={{ alignSelf: "flex-start" }}>
+                  {t("plink_go")} ↗
+                </a>
               </div>
             )}
             {setting("pay_instructions") && <p className="payinfo">{setting("pay_instructions")}</p>}
