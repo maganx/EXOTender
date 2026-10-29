@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
+import { siteUrl } from "@/lib/site";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/org";
@@ -48,7 +48,7 @@ export async function payWithSelcom(fd: FormData) {
   const { data: who } = await supabase.auth.getUser();
 
   const orderId = `TD${Date.now().toString(36).toUpperCase()}${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
-  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
+  const site = await siteUrl();
   let gatewayUrl: string | null = null;
   try {
     const order = await createOrder({

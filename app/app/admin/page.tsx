@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { enableSelcom, extendCompany, reviewPayment, savePayInfo } from "./actions";
-import { headers } from "next/headers";
+import { siteUrl } from "@/lib/site";
 import { selcomConfigured } from "@/lib/selcom";
 import { fmtDate, money } from "@/lib/domain";
 import { getT, type Key } from "@/lib/i18n";
@@ -22,7 +22,7 @@ export default async function Admin(props: { searchParams: Promise<Record<string
   ]);
   const setting = (k: string) => (info ?? []).find((r) => r.key === k)?.value ?? "";
   const keys = selcomConfigured();
-  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
+  const site = await siteUrl();
   const now = Date.now();
 
   return (

@@ -54,6 +54,15 @@ Weka `ANTHROPIC_API_KEY` (kutoka console.anthropic.com → API Keys) kama **Secr
 
 Kampuni inachagua kifurushi na kuweka namba ya simu; inapokea ombi la PIN. Webhook ya Selcom haina sahihi, kwa hiyo seva inauliza Selcom hali ya oda yenyewe kabla ya kuongeza usajili. Malipo ya mkono yanaendelea kufanya kazi pembeni.
 
+## Mialiko na email / Invitations and email
+
+- Endesha `supabase/migrations/0004_invites_email.sql`. Ukurasa wa mwaliko unaonyesha kampuni, nafasi na barua pepe ya mwaliko, na unamwongoza mhusika kujisajili au kuingia kwa barua pepe hiyo.
+- Kila mwaliko una kitufe cha **Tuma WhatsApp**. Email inatumwa yenyewe pale tu huduma ya email imewekwa.
+- **Email za mfumo (mialiko):** fungua akaunti ya [Resend](https://resend.com), thibitisha domain yako (mf. `exoglobal.co.tz`), kisha weka Secrets kwenye Cloudflare Worker: `RESEND_API_KEY` na `EMAIL_FROM` (mf. `Tenda Desk <tenda@exoglobal.co.tz>`).
+- **Email za akaunti (Supabase):** Supabase → Authentication → Emails → SMTP Settings: host `smtp.resend.com`, port `465`, user `resend`, password = API key ya Resend, sender = anwani ile ile. Kisha Templates: bandika HTML kutoka `supabase/email-templates/` (confirm-signup, reset-password, magic-link, change-email, invite-user). Kuzitengeneza upya: `node --experimental-strip-types scripts/email-templates.mjs`.
+- Supabase → Authentication → URL Configuration: Site URL = anwani ya tovuti, na Redirect URLs iwe na `https://<tovuti>/**`.
+- Link za email zinatumia `token_hash`, kwa hiyo zinafunguka kwenye simu au kompyuta yoyote, si lazima ile aliyojisajilia.
+
 ## Kuendesha kwenye kompyuta / Local
 
 ```bash

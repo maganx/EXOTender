@@ -385,6 +385,9 @@ export default async function Home() {
             <h4>{c.contact}</h4>
             <a href="tel:+255718367093">+255 718 367 093</a>
             <a href="mailto:exoglobal@gmail.com">exoglobal@gmail.com</a>
+            <a href="https://exoglobal-website.maganx55.workers.dev/" target="_blank" rel="noopener">
+              {c.site} ↗
+            </a>
             <span>
               Natai Plaza, 17 Mikocheni,
               <br />
@@ -394,7 +397,11 @@ export default async function Home() {
         </div>
         <div className="lp-wrap lp-copy">
           <span>
-            © {new Date().getFullYear()} EXO Global Company Limited. {c.rights}
+            © {new Date().getFullYear()}{" "}
+            <a href="https://exoglobal-website.maganx55.workers.dev/" target="_blank" rel="noopener" style={{ color: "inherit" }}>
+              EXO Global Company Limited
+            </a>
+            . {c.rights}
           </span>
           <span className="lp-motto">Tenda Desk · {c.by}</span>
         </div>

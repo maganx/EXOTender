@@ -1,12 +1,9 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-
-async function siteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
-}
 
 // only same-site paths, never an outside address
 function safeNext(v: FormDataEntryValue | null) {
@@ -56,10 +53,28 @@ export async function signUp(formData: FormData) {
   redirect(next);
 }
 
-export async function signOut() {
+export async function signOut(formData?: FormData) {
   await (await createClient()).auth.signOut();
   (await cookies()).delete("org");
-  redirect("/login");
+  const next = formData?.get("next");
+  redirect(typeof next === "string" && next.startsWith("/login?") ? next : "/login");
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+  const { error } = await (await createClient()).auth.resetPasswordForEmail(email, {
+    redirectTo: `${await siteUrl()}/auth/callback?next=/reset-password`,
+  });
+  // the same answer whether or not the account exists
+  if (error && error.status !== 400 && error.status !== 404) redirect(`/login?mode=forgot&msg=${encodeURIComponent(error.message)}`);
+  redirect("/login?mode=forgot&sent=1");
+}
+
+export async function setNewPassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const { error } = await (await createClient()).auth.updateUser({ password });
+  if (error) redirect(`/reset-password?msg=${encodeURIComponent(error.message)}`);
+  redirect("/app?pw=1");
 }
 
 export async function setLang(formData: FormData) {

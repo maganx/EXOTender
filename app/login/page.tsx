@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { resendConfirmation, signIn, signUp } from "@/app/actions";
+import { requestPasswordReset, resendConfirmation, signIn, signUp } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
 import { getT } from "@/lib/i18n";
 
@@ -8,7 +8,29 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
   const { t } = (await getT());
   const signup = searchParams.mode === "signup";
   const next = searchParams.next ?? "/app";
-  const q = (m?: string) => `/login?${m ? "mode=" + m + "&" : ""}next=${encodeURIComponent(next)}`;
+  const email = searchParams.email ?? "";
+  const q = (m?: string) => `/login?${m ? "mode=" + m + "&" : ""}next=${encodeURIComponent(next)}${email ? `&email=${encodeURIComponent(email)}` : ""}`;
+  if (searchParams.mode === "forgot")
+    return (
+      <AuthShell back="/login?mode=forgot">
+        <h1>{t("forgot_t")}</h1>
+        <p>{t("forgot_s")}</p>
+        {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+        {searchParams.sent && <div className="ok">{t("forgot_sent")}</div>}
+        <form action={requestPasswordReset} className="fields" style={{ gridTemplateColumns: "1fr" }}>
+          <div className="fld">
+            <label htmlFor="email">{t("email")}</label>
+            <input id="email" name="email" type="email" autoComplete="email" required defaultValue={email} />
+          </div>
+          <button className="btn gold" type="submit" style={{ justifyContent: "center" }}>
+            {t("forgot_send")}
+          </button>
+        </form>
+        <Link href={q()} style={{ fontSize: 13.5, color: "var(--gold-strong)" }}>
+          {t("signin")}
+        </Link>
+      </AuthShell>
+    );
   return (
     <AuthShell back={q(signup ? "signup" : undefined)}>
       <h1>{signup ? t("signup") : t("login_t")}</h1>
@@ -36,7 +58,7 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
         )}
         <div className="fld">
           <label htmlFor="email">{t("email")}</label>
-          <input id="email" name="email" type="email" autoComplete="email" required />
+          <input id="email" name="email" type="email" autoComplete="email" required defaultValue={email} />
         </div>
         <div className="fld">
           <label htmlFor="password">{t("password")}</label>
@@ -49,6 +71,11 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
       <Link href={signup ? q() : q("signup")} style={{ fontSize: 13.5, color: "var(--gold-strong)" }}>
         {signup ? t("haveAcc") : t("noAcc")}
       </Link>
+      {!signup && (
+        <Link href={q("forgot")} style={{ fontSize: 13.5, color: "var(--muted)" }}>
+          {t("forgot")}
+        </Link>
+      )}
     </AuthShell>
   );
 }

@@ -39,6 +39,14 @@ const W = {
   createOrg: ["Sajili kampuni", "Register company"],
   invite_t: ["Mwaliko wa kujiunga", "Invitation to join"],
   invite_accept: ["Kubali mwaliko", "Accept invitation"],
+  invite_for: ["{org} imekualika kujiunga kama {role}.", "{org} invited you to join as {role}."],
+  invite_email: ["Mwaliko huu ni wa barua pepe", "This invitation is for"],
+  invite_new: ["Fungua akaunti", "Create an account"],
+  invite_have: ["Nina akaunti, ingia", "I have an account, sign in"],
+  invite_wrong: ["Umeingia kama {me}, lakini mwaliko huu ni wa {email}. Toka, kisha ingia au jisajili kwa {email}.", "You are signed in as {me}, but this invitation is for {email}. Sign out, then sign in or sign up with {email}."],
+  invite_switch: ["Toka, uingie kwa barua pepe sahihi", "Sign out and use the right email"],
+  invite_used: ["Mwaliko huu umeshatumika. Ingia kama kawaida.", "This invitation was already used. Sign in as usual."],
+  invite_expired: ["Mwaliko huu umeisha muda. Muombe aliyekualika akutumie mwaliko mpya.", "This invitation has expired. Ask the person who invited you to send a new one."],
   invite_bad: ["Mwaliko huu haupo, umeisha muda, au ni wa barua pepe nyingine.", "This invitation does not exist, has expired, or is for another email."],
   // overview
   over_t: ["Muhtasari wa tenda", "Tender overview"],
@@ -210,7 +218,22 @@ const W = {
   rd_viewer: ["Kuona tenda tu, bila bei wala malipo", "Sees tenders only, no prices or payments"],
   invite: ["Alika mtu", "Invite someone"],
   invites: ["Mialiko inayosubiri", "Pending invitations"],
-  inviteLink: ["Tuma link hii kwa mhusika (WhatsApp au barua pepe). Ataingia kwa barua pepe hiyo hiyo.", "Send this link to the person (WhatsApp or email). They sign in with that same email."],
+  inviteLink: ["Kila mwaliko una link yake. Mhusika anaifungua na kujisajili au kuingia kwa barua pepe hiyo hiyo.", "Each invitation has its own link. The person opens it and signs up or signs in with that same email."],
+  inv_sent: ["Email ya mwaliko imetumwa.", "Invitation email sent."],
+  inv_nomail: ["Mwaliko umehifadhiwa. Mfumo bado haujawekewa huduma ya email, kwa hiyo mtumie link yake kwa WhatsApp.", "Invitation saved. Email sending is not set up yet, so send the link on WhatsApp."],
+  inv_mailFail: ["Mwaliko umehifadhiwa, lakini email haikutumwa:", "The invitation is saved, but the email was not sent:"],
+  inv_wa: ["Tuma WhatsApp", "Send on WhatsApp"],
+  inv_resend: ["Tuma email tena", "Email again"],
+  inv_emailed: ["Email imetumwa", "Emailed"],
+  inv_waText: ["Habari! Nimekualika kujiunga na {org} kwenye Tenda Desk. Fungua link hii na ujisajili kwa barua pepe {email}:", "Hi! I invited you to join {org} on Tenda Desk. Open this link and sign up with {email}:"],
+  forgot: ["Umesahau neno la siri?", "Forgot your password?"],
+  forgot_t: ["Badilisha neno la siri", "Reset your password"],
+  forgot_s: ["Andika barua pepe yako. Tutakutumia link ya kuweka neno jipya la siri.", "Enter your email. We will send you a link to set a new password."],
+  forgot_send: ["Tuma link", "Send link"],
+  forgot_sent: ["Kama akaunti ipo, tumekutumia barua pepe yenye link ya kubadilisha neno la siri.", "If the account exists, we sent an email with a link to reset your password."],
+  newpw_t: ["Weka neno jipya la siri", "Set a new password"],
+  newpw: ["Neno jipya la siri (angalau herufi 8)", "New password (at least 8 characters)"],
+  newpw_ok: ["Neno la siri limebadilishwa.", "Your password was changed."],
   you: ["wewe", "you"],
   adminOnly: ["Ni Mmiliki au Msimamizi tu anayeweza kusimamia timu.", "Only an owner or admin can manage the team."],
   // vault
@@ -374,7 +397,7 @@ export async function getTheme(): Promise<"light" | "dark"> {
 export function translator(lang: Lang) {
   return (k: Key, vars?: Record<string, string | number>) => {
     let s: string = W[k][lang === "sw" ? 0 : 1];
-    if (vars) for (const v in vars) s = s.replace(`{${v}}`, String(vars[v]));
+    if (vars) for (const v in vars) s = s.replaceAll(`{${v}}`, String(vars[v]));
     return s;
   };
 }

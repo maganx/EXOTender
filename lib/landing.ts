@@ -91,6 +91,7 @@ const C = {
     company: "Kampuni",
     contact: "Mawasiliano",
     rights: "Haki zote zimehifadhiwa.",
+    site: "Tovuti ya EXO Global",
   },
   en: {
     title: "Tenda Desk: government tender management | EXO Global",
@@ -181,6 +182,7 @@ const C = {
     company: "Company",
     contact: "Contact",
     rights: "All rights reserved.",
+    site: "EXO Global website",
   },
 };
 

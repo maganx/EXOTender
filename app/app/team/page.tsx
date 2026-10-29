@@ -1,5 +1,6 @@
-import { headers } from "next/headers";
-import { cancelInvite, invite, removeMember, setRole } from "./actions";
+import { siteUrl } from "@/lib/site";
+import { cancelInvite, invite, removeMember, resendInvite, setRole } from "./actions";
+import { emailConfigured } from "@/lib/email";
 import { ROLES, fmtDate, isAdmin, type Role } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
@@ -14,10 +15,17 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
   const { data: members } = await supabase.from("memberships").select("user_id, role, created_at").eq("org_id", ctx.orgId);
   const ids = (members ?? []).map((m) => m.user_id);
   const { data: people } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] };
-  const { data: invites } = admin
-    ? await supabase.from("invitations").select("id, email, role, token, expires_at").eq("org_id", ctx.orgId).is("accepted_at", null).order("created_at", { ascending: false })
-    : { data: [] };
-  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
+  type Invite = { id: string; email: string; role: string; token: string; expires_at: string; emailed_at?: string | null };
+  let invites: Invite[] = [];
+  if (admin) {
+    const q = (cols: string) =>
+      supabase.from("invitations").select(cols).eq("org_id", ctx.orgId).is("accepted_at", null).order("created_at", { ascending: false });
+    const res = await q("id, email, role, token, expires_at, emailed_at");
+    // emailed_at arrives with migration 0004; list invitations without it until then
+    invites = ((res.error ? (await q("id, email, role, token, expires_at")).data : res.data) ?? []) as unknown as Invite[];
+  }
+  const mail = emailConfigured();
+  const site = await siteUrl();
   const assignable = ROLES.filter((r) => r !== "owner" || ctx.role === "owner");
 
   return (
@@ -29,6 +37,8 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
         </div>
       </div>
       {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.sent && <div className="ok">{t("inv_sent")}</div>}
+      {searchParams.nomail && <div className="ok">{t("inv_nomail")}</div>}
       <div className="grid2">
         <section className="panel-box">
           <h2>{t("members")}</h2>
@@ -109,7 +119,24 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
                       </span>
                       <span className="copy">{`${site}/invite/${i.token}`}</span>
                       <span className="am">
+                        {i.emailed_at ? `✓ ${t("inv_emailed")} · ` : ""}
                         {t("expires")} {fmtDate(i.expires_at, lang)}
+                      </span>
+                      <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+                        <a
+                          className="btn sm"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          href={`https://wa.me/?text=${encodeURIComponent(`${t("inv_waText", { org: ctx.orgName, email: i.email })} ${site}/invite/${i.token}`)}`}
+                        >
+                          {t("inv_wa")}
+                        </a>
+                        {mail && (
+                          <form action={resendInvite}>
+                            <input type="hidden" name="inv" value={i.id} />
+                            <button className="btn sm" type="submit">{t("inv_resend")}</button>
+                          </form>
+                        )}
                       </span>
                     </span>
                     <form action={cancelInvite}>
