@@ -301,8 +301,13 @@ export default async function Home() {
           </div>
           <div>
             <h4>{c.contact}</h4>
+            <a href="tel:+255718367093">+255 718 367 093</a>
             <a href="mailto:exoglobal@gmail.com">exoglobal@gmail.com</a>
-            <span>Tanzania</span>
+            <span>
+              Natai Plaza, 17 Mikocheni,
+              <br />
+              Coca Cola Rd, Mwenge, Dar es Salaam
+            </span>
           </div>
         </div>
         <div className="lp-wrap lp-copy">
