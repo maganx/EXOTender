@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
     url.search = "?expired=1";
     return NextResponse.redirect(url);
   }
-  if (!user && !PUBLIC.some((p) => path.startsWith(p))) {
+  if (!user && path !== "/" && !PUBLIC.some((p) => path.startsWith(p))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
