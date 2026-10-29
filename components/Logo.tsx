@@ -1,16 +1,51 @@
-/** Tenda Desk mark: three bars, a cross and a gold globe. */
-export function Logo({ height = 30 }: { height?: number }) {
+/** The EXO Global globe: the logo's gold "O", a wireframe globe with an orbit arrow. */
+function Globe({ x, y, size }: { x: number; y: number; size: number }) {
+  const s = size / 100;
   return (
-    <svg viewBox="0 0 132 40" style={{ height, width: "auto", display: "block" }} aria-label="Tenda Desk" role="img">
-      <rect x="0" y="4" width="26" height="6" fill="#FFFFFF" />
-      <rect x="0" y="17" width="20" height="6" fill="#FFFFFF" />
-      <rect x="0" y="30" width="26" height="6" fill="#FFFFFF" />
-      <path d="M34 4 L56 36 M56 4 L34 36" stroke="#FFFFFF" strokeWidth="5" fill="none" />
-      <circle cx="82" cy="20" r="15" fill="none" stroke="#C9A86A" strokeWidth="2.6" />
-      <ellipse cx="82" cy="20" rx="7" ry="15" fill="none" stroke="#C9A86A" strokeWidth="1.6" />
-      <path d="M67 20 H97 M70 12 H94 M70 28 H94" stroke="#C9A86A" strokeWidth="1.4" fill="none" />
-      <path d="M100 9 A20 20 0 0 1 103 27" stroke="#C9A86A" strokeWidth="2" fill="none" />
-      <path d="M99 25 L103 29 L106 24" stroke="#C9A86A" strokeWidth="2" fill="none" />
+    <g transform={`translate(${x} ${y}) scale(${s})`} style={{ color: "#C9A86A" }}>
+      <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round">
+        <circle cx="50" cy="50" r="34" />
+        <ellipse cx="50" cy="50" rx="15" ry="34" />
+        <line x1="16" y1="50" x2="84" y2="50" />
+        <path d="M21 33 Q50 40 79 33" />
+        <path d="M21 67 Q50 60 79 67" />
+        <path d="M86 32 A42 42 0 1 0 90 58" />
+      </g>
+      <path d="M78 22 L93 27 L83 39 Z" fill="currentColor" />
+    </g>
+  );
+}
+
+/** EXO Global logo, as on the company website. `full` adds the "GLOBAL LIMITED" line. */
+export function Logo({ height = 30, full = false }: { height?: number; full?: boolean }) {
+  return (
+    <svg
+      viewBox={full ? "0 0 330 150" : "0 0 330 126"}
+      style={{ height, width: "auto", display: "block" }}
+      aria-label="EXO Global Limited"
+      role="img"
+    >
+      <g fill="#FFFFFF">
+        <rect x="0" y="12" width="78" height="20" rx="2" />
+        <rect x="0" y="52" width="66" height="20" rx="2" />
+        <rect x="0" y="92" width="78" height="20" rx="2" />
+        <path d="M98 12 h22 l22 34 l22 -34 h22 l-33 50 l33 50 h-22 l-22 -34 l-22 34 h-22 l33 -50 z" />
+      </g>
+      <Globe x={198} y={-2} size={128} />
+      {full && (
+        <text x="0" y="146" fill="#FFFFFF" fontFamily="Montserrat, Arial, sans-serif" fontSize="21" fontWeight="400" textLength="320" lengthAdjust="spacing">
+          GLOBAL LIMITED
+        </text>
+      )}
+    </svg>
+  );
+}
+
+/** The globe on its own, for decoration. */
+export function GlobeMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true">
+      <Globe x={0} y={0} size={100} />
     </svg>
   );
 }

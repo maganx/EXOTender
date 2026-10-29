@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./landing.css";
 import { LangSwitch } from "@/components/LangSwitch";
-import { Logo } from "@/components/Logo";
+import { GlobeMark, Logo } from "@/components/Logo";
 import { getLang } from "@/lib/i18n";
 import { landingCopy } from "@/lib/landing";
 import { createClient } from "@/lib/supabase/server";
@@ -40,6 +40,23 @@ function Check() {
   );
 }
 
+function Arrow() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" className="lp-arrow">
+      <path d="M4 10h11M11 5l5 5-5 5" />
+    </svg>
+  );
+}
+
+function Pill({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <span className={`lp-pill${dark ? " is-dark" : ""}`}>
+      <i />
+      {children}
+    </span>
+  );
+}
+
 export default async function Home() {
   const lang = await getLang();
   const c = landingCopy(lang);
@@ -50,10 +67,10 @@ export default async function Home() {
 
   return (
     <div className="lp">
-      <header className="lp-nav">
-        <div className="lp-wrap lp-nav-in">
+      <div className="lp-navshell">
+        <header className="lp-nav">
           <Link href="/" className="lp-brand" aria-label="Tenda Desk">
-            <Logo height={28} />
+            <Logo height={26} />
             <span>
               <b>Tenda Desk</b>
               <small>{c.by}</small>
@@ -76,17 +93,14 @@ export default async function Home() {
               {user ? c.nav.open : c.nav.start}
             </Link>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       <main>
         <section className="lp-hero">
           <div className="lp-wrap lp-hero-in">
-            <div>
-              <span className="lp-pill">
-                <i />
-                {c.pill}
-              </span>
+            <div className="lp-hero-copy">
+              <Pill dark>{c.pill}</Pill>
               <h1>
                 {c.h1a}
                 <br />
@@ -95,9 +109,9 @@ export default async function Home() {
               <p className="lp-lead">{c.lead}</p>
               <div className="lp-ctas">
                 <Link href={start} className="lp-btn lp-gold">
-                  {user ? c.nav.open : c.cta} <span aria-hidden="true">→</span>
+                  {user ? c.nav.open : c.cta} <Arrow />
                 </Link>
-                <a href="#how" className="lp-btn lp-ghost">
+                <a href="#how" className="lp-btn lp-glass">
                   {c.cta2}
                 </a>
               </div>
@@ -111,51 +125,92 @@ export default async function Home() {
               </ul>
             </div>
 
-            <div className="lp-mock" aria-hidden="true">
-              <div className="lp-mock-bar">
-                <i />
-                <i />
-                <i />
-                <span>exotender · Tenda Desk</span>
-              </div>
-              <div className="lp-mock-body">
-                <b className="lp-mock-h">{c.mock.title}</b>
-                {c.mock.rows.map(([title, stage, due, cls]) => (
-                  <div key={title} className="lp-mock-row">
-                    <span className="lp-mock-t">{title}</span>
-                    <span className="lp-mock-stage">{stage}</span>
-                    <span className={`lp-chip${cls ? ` is-${cls}` : ""}`}>{due}</span>
-                  </div>
-                ))}
-                <div className="lp-mock-ai">
-                  <div className="lp-mock-ai-h">
-                    <span className="lp-spark">✦</span>
-                    <span>
-                      <b>{c.mock.claude}</b>
-                      <small>{c.mock.found}</small>
-                    </span>
-                  </div>
-                  {c.mock.docs.map(([d, ok]) => (
-                    <div key={String(d)} className={`lp-mock-doc${ok ? " is-done" : ""}`}>
-                      <span className="lp-box">{ok ? "✓" : ""}</span>
-                      {d}
+            <div className="lp-stage" aria-hidden="true">
+              <GlobeMark className="lp-orbit" />
+              <div className="lp-mock">
+                <div className="lp-mock-bar">
+                  <i />
+                  <i />
+                  <i />
+                  <span>exotender · Tenda Desk</span>
+                </div>
+                <div className="lp-mock-body">
+                  <b className="lp-mock-h">{c.mock.title}</b>
+                  {c.mock.rows.map(([title, stage, due, cls]) => (
+                    <div key={title} className="lp-mock-row">
+                      <span className="lp-mock-t">{title}</span>
+                      <span className="lp-mock-stage">{stage}</span>
+                      <span className={`lp-chip${cls ? ` is-${cls}` : ""}`}>{due}</span>
                     </div>
                   ))}
+                  <div className="lp-mock-ai">
+                    <div className="lp-mock-ai-h">
+                      <span className="lp-spark">✦</span>
+                      <span>
+                        <b>{c.mock.claude}</b>
+                        <small>{c.mock.found}</small>
+                      </span>
+                    </div>
+                    {c.mock.docs.map(([d, ok]) => (
+                      <div key={String(d)} className={`lp-mock-doc${ok ? " is-done" : ""}`}>
+                        <span className="lp-box">{ok ? "✓" : ""}</span>
+                        {d}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              </div>
+              <div className="lp-float lp-float-a">
+                <span className="lp-float-ico is-bad">!</span>
+                <span>
+                  <b>{c.tagA[0]}</b>
+                  <small>{c.tagA[1]}</small>
+                </span>
+              </div>
+              <div className="lp-float lp-float-b">
+                <span className="lp-float-ico is-ok">✓</span>
+                <span>
+                  <b>{c.tagB[0]}</b>
+                  <small>{c.tagB[1]}</small>
+                </span>
               </div>
             </div>
           </div>
+
+          <div className="lp-wrap">
+            <dl className="lp-stats">
+              {c.stats.map(([n, label]) => (
+                <div key={label}>
+                  <dt>{n}</dt>
+                  <dd>{label}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
+
+        <div className="lp-marquee" aria-hidden="true">
+          <div className="lp-track">
+            {[...c.marquee, ...c.marquee].map((x, i) => (
+              <span key={i}>
+                {x}
+                <i />
+              </span>
+            ))}
+          </div>
+        </div>
 
         <section className="lp-sec">
           <div className="lp-wrap">
-            <div className="lp-head">
+            <div className="lp-head lp-rv">
+              <Pill>{c.pills.pain}</Pill>
               <h2>{c.painH}</h2>
               <p>{c.painS}</p>
             </div>
             <div className="lp-pains">
-              {c.pains.map(([h, problem, fix]) => (
-                <article key={h} className="lp-pain">
+              {c.pains.map(([h, problem, fix], i) => (
+                <article key={h} className={`lp-pain lp-rv d${i}`}>
+                  <span className="lp-pain-n">{String(i + 1).padStart(2, "0")}</span>
                   <h3>{h}</h3>
                   <p className="lp-problem">{problem}</p>
                   <p className="lp-fix">
@@ -170,17 +225,28 @@ export default async function Home() {
 
         <section className="lp-sec lp-alt" id="features">
           <div className="lp-wrap">
-            <div className="lp-head">
+            <div className="lp-head lp-rv">
+              <Pill>{c.pills.feat}</Pill>
               <h2>{c.featH}</h2>
             </div>
-            <div className="lp-feats">
+            <div className="lp-bento">
               {c.feats.map(([h, p], i) => (
-                <article key={h} className={`lp-feat${i === 1 ? " lp-star" : ""}`}>
+                <article key={h} className={`lp-feat lp-rv d${i % 4}${i === 1 ? " lp-star" : ""}`}>
                   <span className="lp-ico">
                     <Icon d={ICONS[i]} />
                   </span>
                   <h3>{h}</h3>
                   <p>{p}</p>
+                  {i === 1 && (
+                    <div className="lp-star-demo" aria-hidden="true">
+                      {c.mock.docs.map(([d, ok]) => (
+                        <span key={String(d)} className={ok ? "is-done" : ""}>
+                          {ok ? "✓ " : "○ "}
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
@@ -189,13 +255,14 @@ export default async function Home() {
 
         <section className="lp-sec" id="how">
           <div className="lp-wrap">
-            <div className="lp-head">
+            <div className="lp-head lp-rv">
+              <Pill>{c.pills.how}</Pill>
               <h2>{c.howH}</h2>
               <p>{c.howS}</p>
             </div>
-            <ol className="lp-stages">
+            <ol className="lp-stages lp-rv">
               {c.stages.map((s, i) => (
-                <li key={s} className={i >= 4 && i <= 7 ? "won" : ""}>
+                <li key={s} className={i === 8 ? "done" : i >= 4 ? "won" : ""}>
                   <span>{i + 1}</span>
                   {s}
                 </li>
@@ -203,8 +270,8 @@ export default async function Home() {
             </ol>
             <ol className="lp-steps">
               {c.steps.map(([h, p], i) => (
-                <li key={h}>
-                  <span className="lp-n">{String(i + 1).padStart(2, "0")}</span>
+                <li key={h} className={`lp-rv d${i}`}>
+                  <span className="lp-num">{String(i + 1).padStart(2, "0")}</span>
                   <h3>{h}</h3>
                   <p>{p}</p>
                 </li>
@@ -215,15 +282,19 @@ export default async function Home() {
 
         <section className="lp-sec lp-dark">
           <div className="lp-wrap lp-team">
-            <div>
+            <div className="lp-rv">
+              <Pill dark>{c.pills.team}</Pill>
               <h2>{c.teamH}</h2>
               <p>{c.teamS}</p>
             </div>
             <ul className="lp-roles">
-              {c.roles.map(([r, p]) => (
-                <li key={r}>
-                  <b>{r}</b>
-                  <span>{p}</span>
+              {c.roles.map(([r, p], i) => (
+                <li key={r} className={`lp-rv d${i}`}>
+                  <span className="lp-role-n">{String(i + 1).padStart(2, "0")}</span>
+                  <span>
+                    <b>{r}</b>
+                    <small>{p}</small>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -232,13 +303,14 @@ export default async function Home() {
 
         <section className="lp-sec" id="pricing">
           <div className="lp-wrap">
-            <div className="lp-head">
+            <div className="lp-head lp-center lp-rv">
+              <Pill>{c.pills.price}</Pill>
               <h2>{c.priceH}</h2>
               <p>{c.priceS}</p>
             </div>
             <div className="lp-plans">
-              {c.plans.map(([name, price, per, tag]) => (
-                <article key={name} className={`lp-plan${tag ? " lp-best" : ""}`}>
+              {c.plans.map(([name, price, per, tag], i) => (
+                <article key={name} className={`lp-plan lp-rv d${i}${tag ? " lp-best" : ""}`}>
                   {tag && <span className="lp-tag">{tag}</span>}
                   <h3>{name}</h3>
                   <p className="lp-price">
@@ -264,11 +336,17 @@ export default async function Home() {
 
         <section className="lp-sec lp-alt" id="faq">
           <div className="lp-wrap lp-faqwrap">
-            <h2>{c.faqH}</h2>
+            <div className="lp-head lp-rv">
+              <Pill>{c.pills.faq}</Pill>
+              <h2>{c.faqH}</h2>
+            </div>
             <div className="lp-faq">
               {c.faqs.map(([q, a]) => (
-                <details key={q}>
-                  <summary>{q}</summary>
+                <details key={q} className="lp-rv">
+                  <summary>
+                    {q}
+                    <i aria-hidden="true" />
+                  </summary>
                   <p>{a}</p>
                 </details>
               ))}
@@ -276,26 +354,30 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="lp-end">
+        <section className="lp-endsec">
           <div className="lp-wrap">
-            <h2>{c.endH}</h2>
-            <p>{c.endS}</p>
-            <Link href={start} className="lp-btn lp-gold">
-              {user ? c.nav.open : c.cta} <span aria-hidden="true">→</span>
-            </Link>
+            <div className="lp-end lp-rv">
+              <GlobeMark className="lp-end-globe" />
+              <h2>{c.endH}</h2>
+              <p>{c.endS}</p>
+              <Link href={start} className="lp-btn lp-gold">
+                {user ? c.nav.open : c.cta} <Arrow />
+              </Link>
+            </div>
           </div>
         </section>
       </main>
 
       <footer className="lp-foot">
         <div className="lp-wrap lp-foot-in">
-          <div>
-            <Logo height={26} />
+          <div className="lp-foot-brand">
+            <Logo height={56} full />
             <p>{c.foot}</p>
           </div>
           <div>
             <h4>{c.product}</h4>
             <a href="#features">{c.nav.features}</a>
+            <a href="#how">{c.nav.how}</a>
             <a href="#pricing">{c.nav.pricing}</a>
             <Link href="/login">{c.nav.login}</Link>
           </div>
@@ -311,7 +393,13 @@ export default async function Home() {
           </div>
         </div>
         <div className="lp-wrap lp-copy">
-          © {new Date().getFullYear()} EXO Global Company Limited. {c.rights}
+          <span>
+            © {new Date().getFullYear()} EXO Global Company Limited. {c.rights}
+          </span>
+          <span className="lp-motto">Tenda Desk · {c.by}</span>
+        </div>
+        <div className="lp-giant" aria-hidden="true">
+          {c.giant}
         </div>
       </footer>
     </div>
