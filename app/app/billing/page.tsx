@@ -15,7 +15,7 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
   const canPay = canEditPayments(ctx.role);
   const [{ data: plans, error }, { data: info }, { data: pays }, { data: gateway }] = await Promise.all([
     supabase.from("plans").select("*").eq("active", true).order("sort"),
-    supabase.from("platform_settings").select("value").eq("key", "pay_instructions").maybeSingle(),
+    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name"]),
     supabase.from("payments").select("*").eq("org_id", ctx.orgId).order("created_at", { ascending: false }).limit(20),
     supabase.rpc("gateway_ready"),
   ]);
@@ -24,6 +24,8 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
   const open = selcom ? (pays ?? []).find(
         (p) => p.method === "selcom" && p.status === "pending" && (p.order_id === searchParams.order || Date.now() - Date.parse(p.created_at) < 90 * 60_000),
       ) : undefined;
+  const setting = (k: string) => (info ?? []).find((r) => r.key === k)?.value ?? "";
+  const lipa = setting("lipa_number");
   const sub = ctx.sub;
   const daysLeft = sub.endsAt ? Math.ceil((Date.parse(sub.endsAt) - Date.now()) / 86400000) : null;
 
@@ -111,7 +113,19 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
 
           <section className="sec">
             <h3>{selcom ? t("sel_or") : t("bill_how")}</h3>
-            <p className="payinfo">{info?.value}</p>
+            {lipa && (
+              <div className="lipa">
+                <span className="lipa-k">{t("lipa_t")}</span>
+                <b className="lipa-n num">{lipa}</b>
+                {setting("lipa_name") && <span className="lipa-name">{setting("lipa_name")}</span>}
+                <ol>
+                  <li>{t("lipa_1")}</li>
+                  <li>{t("lipa_2", { n: lipa })}</li>
+                  <li>{t("lipa_3")}</li>
+                </ol>
+              </div>
+            )}
+            {setting("pay_instructions") && <p className="payinfo">{setting("pay_instructions")}</p>}
             {canPay ? (
               <form action={reportPayment} style={{ marginTop: 12 }}>
                 <h3 style={{ fontSize: 13 }}>{t("bill_report")}</h3>

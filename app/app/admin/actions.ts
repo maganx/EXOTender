@@ -38,9 +38,11 @@ export async function extendCompany(fd: FormData) {
 
 export async function savePayInfo(fd: FormData) {
   const supabase = await admin();
-  const { error } = await supabase
-    .from("platform_settings")
-    .upsert({ key: "pay_instructions", value: String(fd.get("value") ?? "").slice(0, 2000) });
+  const { error } = await supabase.from("platform_settings").upsert([
+    { key: "pay_instructions", value: String(fd.get("value") ?? "").slice(0, 2000) },
+    { key: "lipa_number", value: String(fd.get("lipa_number") ?? "").replace(/[^0-9 ]/g, "").trim().slice(0, 20) },
+    { key: "lipa_name", value: String(fd.get("lipa_name") ?? "").trim().slice(0, 80) },
+  ]);
   back(error?.message);
 }
 

@@ -22,7 +22,7 @@ const C = {
     trust: ["Siku 14 bure, bila kadi", "Kiswahili na English", "Timu nzima, kila mtu na ruhusa zake"],
     mock: {
       title: "Tenda zako",
-      claude: "Claude amesoma tender document",
+      claude: "EXO imesoma tender document",
       found: "Nyaraka 14 zimeorodheshwa",
       rows: [
         ["Supply of laptops and printers", "Maandalizi", "Siku 3", "bad"],
@@ -35,13 +35,13 @@ const C = {
     painS: "Si kwa sababu bei ni kubwa. Mara nyingi ni nyaraka moja iliyosahaulika, tarehe iliyopita, au faili lililowekwa sehemu isiyo sahihi.",
     pains: [
       ["Tenda mpya hupitwa", "Unakuta tenda inayokufaa siku mbili kabla ya kufungwa.", "Tenda Desk inachuja tenda zilizotangazwa NeST kwa bidhaa zako na kukuonyesha zilizo wazi."],
-      ["Nyaraka hazijulikani", "Tender document ina kurasa 100 na masharti yametawanyika.", "Claude anasoma PDF na kuorodhesha kila nyaraka na kipengele chake."],
+      ["Nyaraka hazijulikani", "Tender document ina kurasa 100 na masharti yametawanyika.", "EXO inasoma PDF na kuorodhesha kila nyaraka na kipengele chake."],
       ["Kazi iko kwenye WhatsApp na Excel", "Hakuna anayejua tenda iko hatua gani wala nani anafanya nini.", "Kila tenda ina faili lake: hatua, kazi inayofuata, nyaraka, bei na kumbukumbu."],
     ],
     featH: "Kila kitu cha tenda, kuanzia kuiona hadi kulipwa",
     feats: [
       ["Tenda mpya za NeST", "Orodha ya tenda zilizo wazi zinazolingana na maneno ya bidhaa zako. Ongeza kwenye daftari lako kwa kubofya mara moja."],
-      ["Claude anasoma tender document", "Chagua PDF, na Claude anaorodhesha nyaraka zote zinazotakiwa, kipengele cha kuziweka na masharti yake."],
+      ["EXO inasoma tender document", "Chagua PDF, na EXO inaorodhesha nyaraka zote zinazotakiwa, kipengele cha kuziweka na masharti yake."],
       ["Orodha ya nyaraka na faili", "Kila nyaraka ina hali yake. Pakia faili kwa kila kipengele na uone kilichobaki kabla ya kuwasilisha."],
       ["Hifadhi ya nyaraka za kampuni", "BRELA, TIN, tax clearance na leseni zinahifadhiwa mara moja, na unakumbushwa kabla hazijaisha muda."],
       ["Bei na faida", "Gharama, usafiri na bei ya zabuni, na faida inayokokotolewa yenyewe. Wasiohusika hawaioni."],
@@ -54,7 +54,7 @@ const C = {
     stages: ["Imeonekana NeST", "Maandalizi", "Imewasilishwa", "Tathmini", "Tuzo", "Mkataba", "Usambazaji", "Malipo", "Imefungwa"],
     steps: [
       ["Tafuta", "Weka maneno ya bidhaa zako. Tenda mpya za NeST zinazolingana zinaonekana kila siku."],
-      ["Andaa", "Pakua tender document NeST, mpe Claude asome, kisha pakia nyaraka kwa kila kipengele."],
+      ["Andaa", "Pakua tender document NeST, EXO iisome, kisha pakia nyaraka kwa kila kipengele."],
       ["Wasilisha", "Bei, bid security na nyaraka zote zikiwa tayari, wasilisha NeST ukiwa na uhakika."],
       ["Simamia", "Ukishinda, fuatilia mkataba, usambazaji, ankara na malipo hadi tenda ifungwe."],
     ],
@@ -73,12 +73,12 @@ const C = {
       ["Miezi 3", "135,000", "TSh 45,000 kwa mwezi", ""],
       ["Mwaka 1", "480,000", "TSh 40,000 kwa mwezi", "Thamani bora"],
     ],
-    planIncl: ["Tenda bila kikomo", "Watumiaji wote wa kampuni", "Usomaji wa Claude 30 kwa mwezi", "Hifadhi ya nyaraka"],
+    planIncl: ["Tenda bila kikomo", "Watumiaji wote wa kampuni", "Usomaji wa tender document 30 kwa mwezi", "Hifadhi ya nyaraka"],
     choose: "Anza bure",
     faqH: "Maswali yanayoulizwa mara nyingi",
     faqs: [
       ["Je, Tenda Desk imeunganishwa na NeST?", "Tenda Desk inasoma orodha ya tenda ambayo NeST inaitangaza hadharani na kuichuja kwa bidhaa zako. Haiingii kwenye akaunti yako ya NeST. Tender documents unazipakua wewe NeST na kuzipakia hapa, na zabuni unaiwasilisha NeST kama kawaida."],
-      ["Claude ni nini?", "Claude ni msaidizi wa akili bandia (AI) kutoka kampuni ya Anthropic. Kwenye Tenda Desk anasoma tender document na kuorodhesha nyaraka zinazotakiwa. Wewe ndiye unaamua zipi ziingie kwenye orodha. Kila kampuni ina usomaji 30 kwa mwezi."],
+      ["Usomaji wa tender document unafanyaje kazi?", "Unachagua PDF ya tender document uliyopakua NeST. EXO inaisoma na kuorodhesha nyaraka zinazotakiwa, kipengele chake na ukurasa. Wewe ndiye unaamua zipi ziingie kwenye orodha yako. Kila kampuni ina usomaji 30 kwa mwezi."],
       ["Data yangu iko salama?", "Kila kampuni inaona data yake tu; hili linalindwa ndani ya database yenyewe, si kwenye skrini peke yake. Ndani ya kampuni, kila mtu anaona kulingana na nafasi yake."],
       ["Siku 14 zikiisha nini kinatokea?", "Mfumo unakuomba ulipie kifurushi. Data yako haifutwi; ukilipia unaendelea ulipoishia."],
       ["Ninalipaje?", "Kwa M-Pesa, Mixx by Yas, Airtel Money, HaloPesa au benki. Baada ya kulipa, weka namba ya muamala kwenye ukurasa wa Malipo na usajili unaongezwa."],
@@ -112,7 +112,7 @@ const C = {
     trust: ["14 days free, no card", "Swahili and English", "Your whole team, each with the right access"],
     mock: {
       title: "Your tenders",
-      claude: "Claude read the tender document",
+      claude: "EXO read the tender document",
       found: "14 documents listed",
       rows: [
         ["Supply of laptops and printers", "Preparing", "3 days", "bad"],
@@ -125,13 +125,13 @@ const C = {
     painS: "Rarely because of price. More often it is one forgotten document, a missed date, or a file in the wrong section.",
     pains: [
       ["New tenders slip by", "You find the right tender two days before it closes.", "Tenda Desk filters published NeST tenders by what you sell and shows the ones still open."],
-      ["Requirements are buried", "The tender document runs to 100 pages with conditions everywhere.", "Claude reads the PDF and lists every document and where it goes."],
+      ["Requirements are buried", "The tender document runs to 100 pages with conditions everywhere.", "EXO reads the PDF and lists every document and where it goes."],
       ["Work lives in WhatsApp and Excel", "Nobody knows which stage a tender is at or who is doing what.", "Each tender has one file: stage, next action, documents, price and history."],
     ],
     featH: "Everything a tender needs, from first sight to payment",
     feats: [
       ["New NeST tenders", "Open tenders that match your product words. Add them to your register in one click."],
-      ["Claude reads the tender document", "Pick the PDF and Claude lists every required document, where it goes and its conditions."],
+      ["EXO reads the tender document", "Pick the PDF and EXO lists every required document, where it goes and its conditions."],
       ["Document checklist and files", "Each document has a status. Upload files per requirement and see what is left before you submit."],
       ["Company document vault", "BRELA, TIN, tax clearance and licences stored once, with reminders before they expire."],
       ["Pricing and margin", "Cost, transport and bid price with margin worked out for you. Hidden from people who should not see it."],
@@ -144,7 +144,7 @@ const C = {
     stages: ["Found on NeST", "Preparing", "Submitted", "Evaluation", "Award", "Contract", "Supply", "Payment", "Closed"],
     steps: [
       ["Find", "Set the words for what you sell. Matching NeST tenders show up every day."],
-      ["Prepare", "Download the tender document from NeST, let Claude read it, then upload documents per requirement."],
+      ["Prepare", "Download the tender document from NeST, let EXO read it, then upload documents per requirement."],
       ["Submit", "With price, bid security and every document ready, submit on NeST with confidence."],
       ["Deliver", "When you win, follow the contract, supply, invoices and payments until the tender closes."],
     ],
@@ -163,12 +163,12 @@ const C = {
       ["3 months", "135,000", "TSh 45,000 a month", ""],
       ["1 year", "480,000", "TSh 40,000 a month", "Best value"],
     ],
-    planIncl: ["Unlimited tenders", "Every user in your company", "30 Claude reads a month", "Document vault"],
+    planIncl: ["Unlimited tenders", "Every user in your company", "30 tender document reads a month", "Document vault"],
     choose: "Start free",
     faqH: "Frequently asked questions",
     faqs: [
       ["Is Tenda Desk connected to NeST?", "Tenda Desk reads the tender list NeST publishes openly and filters it for what you sell. It never signs in to your NeST account. You download tender documents from NeST, upload them here, and submit your bid on NeST as usual."],
-      ["What is Claude?", "Claude is an AI assistant made by Anthropic. In Tenda Desk it reads the tender document and lists the documents required. You decide which ones go on your checklist. Each company gets 30 reads a month."],
+      ["How does the tender document reader work?", "Pick the tender document PDF you downloaded from NeST. EXO reads it and lists the required documents, their section and page. You decide which ones go on your checklist. Each company gets 30 reads a month."],
       ["Is my data safe?", "Each company sees only its own data; this is enforced inside the database, not just on screen. Inside a company, people see what their role allows."],
       ["What happens after 14 days?", "The system asks you to choose a plan. Nothing is deleted; once you pay you carry on where you left off."],
       ["How do I pay?", "By M-Pesa, Mixx by Yas, Airtel Money, HaloPesa or bank. After paying, enter the transaction ID on the Billing page and your subscription is extended."],

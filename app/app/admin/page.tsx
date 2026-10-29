@@ -17,9 +17,10 @@ export default async function Admin(props: { searchParams: Promise<Record<string
     // Selcom payments settle themselves from Selcom's answer, so only manual reports wait here
     supabase.from("payments").select("*, organizations(name)").eq("status", "pending").neq("method", "selcom").order("created_at"),
     supabase.rpc("platform_companies"),
-    supabase.from("platform_settings").select("value").eq("key", "pay_instructions").maybeSingle(),
+    supabase.from("platform_settings").select("key, value").in("key", ["pay_instructions", "lipa_number", "lipa_name"]),
     supabase.rpc("gateway_ready"),
   ]);
+  const setting = (k: string) => (info ?? []).find((r) => r.key === k)?.value ?? "";
   const keys = selcomConfigured();
   const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
   const now = Date.now();
@@ -104,9 +105,19 @@ export default async function Admin(props: { searchParams: Promise<Record<string
       </section>
 
       <form action={savePayInfo} className="sec">
+        <div className="fields">
+          <div className="fld">
+            <label htmlFor="lipa_number">{t("adm_lipaNo")}</label>
+            <input id="lipa_number" name="lipa_number" inputMode="numeric" defaultValue={setting("lipa_number")} placeholder="12345678" />
+          </div>
+          <div className="fld">
+            <label htmlFor="lipa_name">{t("adm_lipaName")}</label>
+            <input id="lipa_name" name="lipa_name" defaultValue={setting("lipa_name")} placeholder="EXO GLOBAL COMPANY LIMITED" />
+          </div>
+        </div>
         <div className="fld">
           <label htmlFor="payinfo">{t("adm_payinfo")}</label>
-          <textarea id="payinfo" name="value" defaultValue={info?.value ?? ""} />
+          <textarea id="payinfo" name="value" defaultValue={setting("pay_instructions")} />
         </div>
         <div className="actions">
           <button className="btn gold" type="submit">{t("save")}</button>
