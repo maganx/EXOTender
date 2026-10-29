@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { extendCompany, reviewPayment, savePayInfo } from "./actions";
+import { enableSelcom, extendCompany, reviewPayment, savePayInfo } from "./actions";
+import { headers } from "next/headers";
+import { selcomConfigured } from "@/lib/selcom";
 import { fmtDate, money } from "@/lib/domain";
 import { getT, type Key } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
@@ -11,11 +13,15 @@ export default async function Admin(props: { searchParams: Promise<Record<string
   if (!ctx.platformAdmin) redirect("/app");
   const { t, lang } = await getT();
   const supabase = await createClient();
-  const [{ data: pending }, { data: companies }, { data: info }] = await Promise.all([
-    supabase.from("payments").select("*, organizations(name)").eq("status", "pending").order("created_at"),
+  const [{ data: pending }, { data: companies }, { data: info }, { data: gateway }] = await Promise.all([
+    // Selcom payments settle themselves from Selcom's answer, so only manual reports wait here
+    supabase.from("payments").select("*, organizations(name)").eq("status", "pending").neq("method", "selcom").order("created_at"),
     supabase.rpc("platform_companies"),
     supabase.from("platform_settings").select("value").eq("key", "pay_instructions").maybeSingle(),
+    supabase.rpc("gateway_ready"),
   ]);
+  const keys = selcomConfigured();
+  const site = process.env.NEXT_PUBLIC_SITE_URL || `https://${(await headers()).get("host")}`;
   const now = Date.now();
 
   return (
@@ -27,6 +33,7 @@ export default async function Admin(props: { searchParams: Promise<Record<string
         </div>
       </div>
       {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.selcom && <div className="notice">{searchParams.selcom}</div>}
 
       <section className="sec">
         <h3>{t("adm_pending")}</h3>
@@ -79,6 +86,21 @@ export default async function Admin(props: { searchParams: Promise<Record<string
             );
           })}
         </ul>
+      </section>
+
+      <section className="sec">
+        <h3>{t("adm_selcom")}</h3>
+        <p className="payinfo">{!keys ? t("adm_selOff") : gateway === true ? t("adm_selReady") : t("adm_selSet")}</p>
+        {keys && (
+          <>
+            <p className="am" style={{ marginTop: 8 }}>
+              {t("adm_selWebhook")}: <code>{site}/api/selcom/webhook</code>
+            </p>
+            <form action={enableSelcom} className="actions">
+              <button className={`btn ${gateway === true ? "" : "gold"}`} type="submit">{gateway === true ? t("adm_selAgain") : t("adm_selOn")}</button>
+            </form>
+          </>
+        )}
       </section>
 
       <form action={savePayInfo} className="sec">

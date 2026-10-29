@@ -1,8 +1,9 @@
-import { reportPayment } from "./actions";
+import { checkSelcom, payWithSelcom, reportPayment } from "./actions";
 import { canEditPayments, fmtDate, money } from "@/lib/domain";
 import { getT, type Key } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
+import { selcomConfigured } from "@/lib/selcom";
 
 const METHODS = ["mpesa", "mixx", "airtel", "halopesa", "bank", "other"] as const;
 
@@ -12,11 +13,17 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
   const { t, lang } = await getT();
   const supabase = await createClient();
   const canPay = canEditPayments(ctx.role);
-  const [{ data: plans, error }, { data: info }, { data: pays }] = await Promise.all([
+  const [{ data: plans, error }, { data: info }, { data: pays }, { data: gateway }] = await Promise.all([
     supabase.from("plans").select("*").eq("active", true).order("sort"),
     supabase.from("platform_settings").select("value").eq("key", "pay_instructions").maybeSingle(),
     supabase.from("payments").select("*").eq("org_id", ctx.orgId).order("created_at", { ascending: false }).limit(20),
+    supabase.rpc("gateway_ready"),
   ]);
+  // Selcom shows once its keys are in Cloudflare and a platform admin has switched it on
+  const selcom = canPay && selcomConfigured() && gateway === true;
+  const open = selcom ? (pays ?? []).find(
+        (p) => p.method === "selcom" && p.status === "pending" && (p.order_id === searchParams.order || Date.now() - Date.parse(p.created_at) < 90 * 60_000),
+      ) : undefined;
   const sub = ctx.sub;
   const daysLeft = sub.endsAt ? Math.ceil((Date.parse(sub.endsAt) - Date.now()) / 86400000) : null;
 
@@ -30,6 +37,8 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
       </div>
       {searchParams.msg && <div className="err">{searchParams.msg}</div>}
       {searchParams.sent && <div className="ok">{t("bill_sent")}</div>}
+      {searchParams.paid && <div className="ok">{t("sel_paid")}</div>}
+      {searchParams.closed && <div className="err">{t("sel_closed")}</div>}
       {error ? (
         <div className="notice">{t("bill_noSql")}</div>
       ) : (
@@ -58,8 +67,50 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
             </div>
           </section>
 
+          {selcom && (
+            <section className="sec selcom">
+              <h3>{t("sel_t")}</h3>
+              {open ? (
+                <>
+                  <p className="payinfo">{t("sel_wait", { p: open.payer_phone ?? "" })}</p>
+                  {searchParams.checked && <div className="notice">{t("sel_notyet")}</div>}
+                  <form action={checkSelcom} className="actions">
+                    <input type="hidden" name="order" value={open.order_id} />
+                    <button className="btn gold" type="submit">{t("sel_check")}</button>
+                    {open.gateway_url && (
+                      <a className="btn" href={open.gateway_url} target="_blank" rel="noopener noreferrer">{t("sel_card")}</a>
+                    )}
+                  </form>
+                </>
+              ) : (
+                <form action={payWithSelcom}>
+                  <p className="payinfo">{t("sel_s")}</p>
+                  <div className="fields">
+                    <div className="fld">
+                      <label htmlFor="sel-plan">{t("bill_plan")}</label>
+                      <select id="sel-plan" name="plan" required>
+                        {(plans ?? []).map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {lang === "sw" ? p.name_sw : p.name_en} · {money(p.price_tzs)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="fld">
+                      <label htmlFor="sel-phone">{t("sel_phone")}</label>
+                      <input id="sel-phone" name="phone" type="tel" inputMode="tel" required placeholder="0754 123 456" autoComplete="tel" />
+                    </div>
+                  </div>
+                  <div className="actions">
+                    <button className="btn gold" type="submit">{t("sel_go")}</button>
+                  </div>
+                </form>
+              )}
+            </section>
+          )}
+
           <section className="sec">
-            <h3>{t("bill_how")}</h3>
+            <h3>{selcom ? t("sel_or") : t("bill_how")}</h3>
             <p className="payinfo">{info?.value}</p>
             {canPay ? (
               <form action={reportPayment} style={{ marginTop: 12 }}>

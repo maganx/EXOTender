@@ -45,6 +45,15 @@ Weka `ANTHROPIC_API_KEY` (kutoka console.anthropic.com → API Keys) kama **Secr
   `insert into platform_admins (user_id) select id from auth.users where email = 'barua@pepe.yako';`
 - Bei ziko kwenye jedwali `plans` (TZS). Unaweza kuzibadilisha kwenye Supabase → Table Editor → plans.
 
+### Selcom (malipo ya moja kwa moja)
+
+1. Endesha `supabase/migrations/0003_selcom.sql` kwenye SQL Editor.
+2. Kutoka Selcom (akaunti ya mfanyabiashara, Checkout API) weka hizi kama **Secrets** kwenye Cloudflare Worker: `SELCOM_API_KEY`, `SELCOM_API_SECRET`, `SELCOM_VENDOR` (namba ya till/vendor). `SELCOM_BASE_URL` ni hiari (chaguo-msingi `https://apigw.selcommobile.com`; weka anwani ya sandbox wakati wa majaribio).
+3. Fungua **Usimamizi** na ubofye **Washa Selcom**. Hii inahifadhi alama ya ufunguo kwenye database na kujaribu funguo kwa Selcom.
+4. Mpe Selcom anwani ya webhook inayoonyeshwa hapo (`/api/selcom/webhook`) kama wataiomba.
+
+Kampuni inachagua kifurushi na kuweka namba ya simu; inapokea ombi la PIN. Webhook ya Selcom haina sahihi, kwa hiyo seva inauliza Selcom hali ya oda yenyewe kabla ya kuongeza usajili. Malipo ya mkono yanaendelea kufanya kazi pembeni.
+
 ## Kuendesha kwenye kompyuta / Local
 
 ```bash

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/login", "/auth", "/invite"];
+const PUBLIC = ["/login", "/auth", "/invite", "/api/selcom/"];
 
 export async function updateSession(request: NextRequest) {
   // pages read the path to decide what an expired subscription may still open

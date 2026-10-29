@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/org";
 import { str } from "@/lib/domain";
+import { gatewayKey, orderStatus, sha256Hex } from "@/lib/selcom";
 
 // every check is repeated in the database functions; this only keeps others off the page
 async function admin() {
@@ -41,4 +42,22 @@ export async function savePayInfo(fd: FormData) {
     .from("platform_settings")
     .upsert({ key: "pay_instructions", value: String(fd.get("value") ?? "").slice(0, 2000) });
   back(error?.message);
+}
+
+/** Stores the hash of the server's Selcom confirmation key, then checks the keys work with one status call. */
+export async function enableSelcom() {
+  const supabase = await admin();
+  const key = await gatewayKey();
+  if (!key) back("SELCOM_API_KEY / SELCOM_API_SECRET / SELCOM_VENDOR");
+  const { error } = await supabase.rpc("set_gateway_key", { p_hash: await sha256Hex(key) });
+  if (error) back(error.message);
+  let note = "";
+  try {
+    const r = await orderStatus("TDTEST0000");
+    note = `Selcom: ${r.resultcode ?? "?"} ${r.message ?? r.result ?? ""}`.trim();
+  } catch (e) {
+    note = `Selcom: ${e instanceof Error ? e.message : "no reply"}`;
+  }
+  revalidatePath("/app/admin");
+  redirect(`/app/admin?selcom=${encodeURIComponent(note)}`);
 }
