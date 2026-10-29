@@ -6,11 +6,12 @@ import { requireOrg } from "@/lib/org";
 import { STD_DOCS, canEdit } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { MAX_CHARS, readTender, type ReadItem } from "@/lib/reader";
+import { serverEnv } from "@/lib/env";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 const KINDS = ["tender", "bid", "other"];
-const monthlyReads = () => Number(process.env.AI_MONTHLY_READS || 30);
+const monthlyReads = () => Number(serverEnv("AI_MONTHLY_READS") || 30);
 
 async function ownTender(id: string) {
   const ctx = await requireOrg();
@@ -68,7 +69,7 @@ export async function readTenderDocument(tenderId: string, text: string): Promis
   const { t, lang } = await getT();
   const { ctx, supabase, found } = await ownTender(tenderId);
   if (!found) return { ok: false, error: t("notAllowed") };
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, error: t("ai_nokey") };
+  if (!serverEnv("ANTHROPIC_API_KEY")) return { ok: false, error: t("ai_nokey") };
   const clean = text.replace(/[ \t]+/g, " ").trim();
   if (clean.length < 200) return { ok: false, error: t("ai_notext") };
   if (clean.length > MAX_CHARS) return { ok: false, error: t("ai_toolong") };

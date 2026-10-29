@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { STD_DOCS } from "./domain";
 import type { Lang } from "./i18n";
+import { serverEnv } from "./env";
 
 const STD_KEYS = STD_DOCS.map(([k, , en]) => `${k} (${en})`);
 
@@ -32,7 +33,7 @@ Merge duplicates. Keep each label short. Write label, section and note in {LANG}
 
 /** Ask Claude which documents a tender requires. `text` is the tender document text, page by page. */
 export async function readTender(text: string, lang: Lang): Promise<ReadResult> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({ apiKey: serverEnv("ANTHROPIC_API_KEY") });
   const response = await client.beta.messages.parse({
     model: "claude-opus-5-5",
     max_tokens: 16000,
