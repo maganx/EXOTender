@@ -18,9 +18,18 @@ const Reading = z.object({
       page: z.number().int().nullable().describe("Page of the tender document where the requirement is stated, if known."),
     }),
   ),
+  supplies: z.array(
+    z.object({
+      item: z.string().describe("The good or service to supply, named as the schedule names it, with its key specification if short (e.g. size, capacity)."),
+      qty: z.string().describe("Quantity with its unit as written, e.g. \"6\", \"40 pcs\", \"2 units\". Empty if not stated."),
+      site: z.string().describe("Delivery site or place of installation. Empty if not stated."),
+      days: z.number().int().nullable().describe("Delivery or completion period in days, if stated."),
+    }),
+  ),
 });
 export type ReadItem = z.infer<typeof Reading>["documents"][number];
-export type ReadResult = { summary: string; documents: ReadItem[]; inputTokens: number; outputTokens: number };
+export type SupplyItem = z.infer<typeof Reading>["supplies"][number];
+export type ReadResult = { summary: string; documents: ReadItem[]; supplies: SupplyItem[]; inputTokens: number; outputTokens: number };
 
 // About 400k tokens of text: well inside the model's context, and a bound on the cost of one read.
 export const MAX_CHARS = 1_500_000;
@@ -29,7 +38,8 @@ const SYSTEM = `You read Tanzanian public procurement tender documents (NeST, PP
 List every document, certificate, form and attachment the bidder must submit with the bid, from the Instructions to Bidders, Bid Data Sheet, evaluation and qualification criteria, and bidding forms.
 Include qualification evidence (registration, tax, licences, experience, financial statements, manufacturer authorisation), forms to fill and sign, bid security or declaration, price schedules, technical compliance sheets and samples or brochures.
 Leave out documents only the procuring entity issues and post-award items (performance security, contract signing) unless they are required at bid time.
-Merge duplicates. Keep each label short. Write label, section and note in {LANG}; keep official form names and clause numbers as they appear.`;
+Separately, under supplies, list every line item the supplier must deliver, from the Schedule of Requirements, List of Goods and Services, Delivery and Completion Schedule or Price Schedule: one entry per line, with quantity, delivery site and delivery period. Do not invent items; leave supplies empty if the document has no such list.
+Merge duplicates. Keep each label short. Write label, section, note and site in {LANG}, but keep item names as the tender writes them; keep official form names and clause numbers as they appear.`;
 
 /** Ask Claude which documents a tender requires. `text` is the tender document text, page by page. */
 export async function readTender(text: string, lang: Lang): Promise<ReadResult> {
@@ -47,6 +57,7 @@ export async function readTender(text: string, lang: Lang): Promise<ReadResult> 
   if (response.stop_reason === "max_tokens" || !response.parsed_output) throw new Error("incomplete");
   return {
     ...response.parsed_output,
+    supplies: response.parsed_output.supplies ?? [],
     inputTokens: response.usage.input_tokens,
     outputTokens: response.usage.output_tokens,
   };

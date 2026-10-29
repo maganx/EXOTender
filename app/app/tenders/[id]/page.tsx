@@ -438,7 +438,7 @@ function PriceStats({ p, t }: { p: Pricing | null; t: T }) {
 
 const UPLOAD_KEYS = [
   "upload", "uploading", "kind", "k_tender", "k_bid", "k_other", "forDoc", "none", "file", "tooBig",
-  "ai_h", "ai_hint", "ai_pick", "ai_pages", "ai_asking", "ai_found", "ai_add", "ai_left", "ai_cancel", "ai_page",
+  "ai_h", "ai_hint", "ai_pick", "ai_pages", "ai_asking", "ai_found", "ai_add", "ai_left", "ai_cancel", "ai_page", "sup_found", "sup_hint", "sup_qty", "sup_days",
 ] as const;
 
 async function DocsTab({ x, docs, edit, t, orgId, lang }: { x: Tender; docs: TDoc[]; edit: boolean; t: T; orgId: string; lang: "sw" | "en" }) {

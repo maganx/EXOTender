@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/lib/org";
 import { STD_DOCS, canEdit } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
-import { MAX_CHARS, readTender, type ReadItem } from "@/lib/reader";
+import { MAX_CHARS, readTender, type ReadItem, type SupplyItem } from "@/lib/reader";
 import { serverEnv } from "@/lib/env";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
@@ -65,7 +65,7 @@ export async function deleteTenderFile(fd: FormData) {
 }
 
 /** Claude reads the tender document text and lists the documents the bid needs. */
-export async function readTenderDocument(tenderId: string, text: string): Promise<Result<{ summary: string; documents: ReadItem[]; left: number }>> {
+export async function readTenderDocument(tenderId: string, text: string): Promise<Result<{ summary: string; documents: ReadItem[]; supplies: SupplyItem[]; left: number }>> {
   const { t, lang } = await getT();
   const { ctx, supabase, found } = await ownTender(tenderId);
   if (!found) return { ok: false, error: t("notAllowed") };
@@ -84,15 +84,18 @@ export async function readTenderDocument(tenderId: string, text: string): Promis
   try {
     const r = await readTender(clean, lang);
     await supabase.from("ai_reads").insert({ org_id: ctx.orgId, tender_id: tenderId, user_id: ctx.userId, input_tokens: r.inputTokens, output_tokens: r.outputTokens });
-    return { ok: true, summary: r.summary, documents: r.documents, left: left - 1 };
+    return { ok: true, summary: r.summary, documents: r.documents, supplies: r.supplies, left: left - 1 };
   } catch (e) {
     console.error("tender reader", e);
     return { ok: false, error: t("ai_failed") };
   }
 }
 
-/** Adds the documents the person kept from a reading; standard ones update the existing line. */
-export async function addReadDocuments(tenderId: string, items: ReadItem[], summary: string): Promise<Result> {
+/**
+ * Adds the documents the person kept from a reading (standard ones update the existing line)
+ * and the items to supply, as planned lines under Supply.
+ */
+export async function addReadDocuments(tenderId: string, items: ReadItem[], summary: string, supplies: SupplyItem[] = []): Promise<Result> {
   const { t } = await getT();
   const { ctx, supabase, found } = await ownTender(tenderId);
   if (!found) return { ok: false, error: t("notAllowed") };
@@ -119,7 +122,25 @@ export async function addReadDocuments(tenderId: string, items: ReadItem[], summ
   }
   const { error } = fresh.length ? await supabase.from("tender_documents").insert(fresh) : { error: null };
   if (error) return { ok: false, error: error.message };
-  await supabase.from("activity_log").insert({ tender_id: tenderId, user_id: ctx.userId, text: `${t("ai_logged", { n: items.length })} ${summary}`.slice(0, 2000) });
+
+  const { data: lines } = await supabase.from("deliveries").select("item").eq("tender_id", tenderId);
+  const seen = new Set((lines ?? []).map((l) => String(l.item).trim().toLowerCase()));
+  const rows: Record<string, unknown>[] = [];
+  for (const s of supplies.slice(0, 150)) {
+    const name = String(s.item ?? "").trim();
+    if (!name) continue;
+    const where = [String(s.site ?? "").trim(), Number.isInteger(s.days) && s.days! > 0 ? t("sup_days", { n: s.days! }) : ""].filter(Boolean).join(", ");
+    const item = (where ? `${name} (${where})` : name).slice(0, 300);
+    if (seen.has(item.toLowerCase())) continue;
+    seen.add(item.toLowerCase());
+    rows.push({ tender_id: tenderId, item, qty: String(s.qty ?? "").trim().slice(0, 60) || null });
+  }
+  if (rows.length) {
+    const { error: e2 } = await supabase.from("deliveries").insert(rows);
+    if (e2) return { ok: false, error: e2.message };
+  }
+  const logged = t("ai_logged", { n: items.length }) + (rows.length ? ` ${t("sup_logged", { n: rows.length })}` : "");
+  await supabase.from("activity_log").insert({ tender_id: tenderId, user_id: ctx.userId, text: `${logged} ${summary}`.slice(0, 2000) });
   revalidatePath(`/app/tenders/${tenderId}`);
   return { ok: true };
 }

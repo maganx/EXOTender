@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { addReadDocuments, readTenderDocument, recordTenderFile } from "@/app/app/tenders/files";
 import { pdfText, safeName } from "@/lib/pdftext";
-import type { ReadItem } from "@/lib/reader";
+import type { ReadItem, SupplyItem } from "@/lib/reader";
 import { createClient } from "@/lib/supabase/client";
 
 const MAX_MB = 25;
 
 type Labels = Record<
   | "upload" | "uploading" | "kind" | "k_tender" | "k_bid" | "k_other" | "forDoc" | "none" | "file" | "tooBig"
-  | "ai_h" | "ai_hint" | "ai_pick" | "ai_pages" | "ai_asking" | "ai_found" | "ai_add" | "ai_left" | "ai_cancel" | "ai_page",
+  | "ai_h" | "ai_hint" | "ai_pick" | "ai_pages" | "ai_asking" | "ai_found" | "ai_add" | "ai_left" | "ai_cancel" | "ai_page" | "sup_found" | "sup_hint" | "sup_qty" | "sup_days",
   string
 >;
 
@@ -93,8 +93,9 @@ export function TenderReader({ orgId, tenderId, L }: { orgId: string; tenderId: 
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [found, setFound] = useState<{ summary: string; documents: ReadItem[]; left: number } | null>(null);
+  const [found, setFound] = useState<{ summary: string; documents: ReadItem[]; supplies: SupplyItem[]; left: number } | null>(null);
   const [keep, setKeep] = useState<boolean[]>([]);
+  const [keepS, setKeepS] = useState<boolean[]>([]);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -115,6 +116,7 @@ export function TenderReader({ orgId, tenderId, L }: { orgId: string; tenderId: 
       if (!r.ok) throw new Error(r.error);
       setFound(r);
       setKeep(r.documents.map(() => true));
+      setKeepS(r.supplies.map(() => true));
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -127,7 +129,12 @@ export function TenderReader({ orgId, tenderId, L }: { orgId: string; tenderId: 
   async function onAdd() {
     if (!found) return;
     setBusy(true);
-    const r = await addReadDocuments(tenderId, found.documents.filter((_, i) => keep[i]), found.summary);
+    const r = await addReadDocuments(
+      tenderId,
+      found.documents.filter((_, i) => keep[i]),
+      found.summary,
+      found.supplies.filter((_, i) => keepS[i]),
+    );
     setBusy(false);
     if (!r.ok) return setErr(r.error);
     setFound(null);
@@ -163,6 +170,29 @@ export function TenderReader({ orgId, tenderId, L }: { orgId: string; tenderId: 
               </label>
             ))}
           </div>
+          {found.supplies.length > 0 && (
+            <>
+              <p style={{ marginTop: 14 }}>
+                <b>{L.sup_found.replace("{n}", String(found.supplies.length))}</b> {L.sup_hint}
+              </p>
+              <div className="found">
+                {found.supplies.map((s, i) => (
+                  <label key={i}>
+                    <input type="checkbox" checked={keepS[i] ?? false} onChange={(e) => setKeepS((k) => k.map((v, j) => (j === i ? e.target.checked : v)))} />
+                    <span>
+                      <span style={{ fontWeight: 600 }}>{s.item}</span>
+                      {s.qty && <span className="dsec"> · {L.sup_qty} <b>{s.qty}</b></span>}
+                      {(s.site || s.days) && (
+                        <span className="am" style={{ display: "block", whiteSpace: "normal" }}>
+                          {[s.site, s.days ? L.sup_days.replace("{n}", String(s.days)) : ""].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
           <div className="row" style={{ justifyContent: "space-between" }}>
             <span className="st">{L.ai_left.replace("{n}", String(found.left))}</span>
             <span style={{ display: "flex", gap: 8 }}>

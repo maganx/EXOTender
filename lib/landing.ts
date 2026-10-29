@@ -41,7 +41,7 @@ const C = {
     featH: "Kila kitu cha tenda, kuanzia kuiona hadi kulipwa",
     feats: [
       ["Tenda mpya za NeST", "Orodha ya tenda zilizo wazi zinazolingana na maneno ya bidhaa zako. Ongeza kwenye daftari lako kwa kubofya mara moja."],
-      ["EXO inasoma tender document", "Chagua PDF, na EXO inaorodhesha nyaraka zote zinazotakiwa, kipengele cha kuziweka na masharti yake."],
+      ["EXO inasoma tender document", "Chagua PDF, na EXO inaorodhesha nyaraka zote zinazotakiwa na kipengele chake, pamoja na bidhaa za kusambaza na idadi yake."],
       ["Orodha ya nyaraka na faili", "Kila nyaraka ina hali yake. Pakia faili kwa kila kipengele na uone kilichobaki kabla ya kuwasilisha."],
       ["Hifadhi ya nyaraka za kampuni", "BRELA, TIN, tax clearance na leseni zinahifadhiwa mara moja, na unakumbushwa kabla hazijaisha muda."],
       ["Bei na faida", "Gharama, usafiri na bei ya zabuni, na faida inayokokotolewa yenyewe. Wasiohusika hawaioni."],
@@ -78,7 +78,7 @@ const C = {
     faqH: "Maswali yanayoulizwa mara nyingi",
     faqs: [
       ["Je, Tenda Desk imeunganishwa na NeST?", "Tenda Desk inasoma orodha ya tenda ambayo NeST inaitangaza hadharani na kuichuja kwa bidhaa zako. Haiingii kwenye akaunti yako ya NeST. Tender documents unazipakua wewe NeST na kuzipakia hapa, na zabuni unaiwasilisha NeST kama kawaida."],
-      ["Usomaji wa tender document unafanyaje kazi?", "Unachagua PDF ya tender document uliyopakua NeST. EXO inaisoma na kuorodhesha nyaraka zinazotakiwa, kipengele chake na ukurasa. Wewe ndiye unaamua zipi ziingie kwenye orodha yako. Kila kampuni ina usomaji 30 kwa mwezi."],
+      ["Usomaji wa tender document unafanyaje kazi?", "Unachagua PDF ya tender document uliyopakua NeST. EXO inaisoma na kuorodhesha nyaraka zinazotakiwa, kipengele chake na ukurasa, pamoja na bidhaa za kusambaza na idadi yake. Wewe ndiye unaamua zipi ziingie: nyaraka kwenye orodha yako, bidhaa kwenye Usambazaji. Kila kampuni ina usomaji 30 kwa mwezi."],
       ["Data yangu iko salama?", "Kila kampuni inaona data yake tu; hili linalindwa ndani ya database yenyewe, si kwenye skrini peke yake. Ndani ya kampuni, kila mtu anaona kulingana na nafasi yake."],
       ["Siku 14 zikiisha nini kinatokea?", "Mfumo unakuomba ulipie kifurushi. Data yako haifutwi; ukilipia unaendelea ulipoishia."],
       ["Ninalipaje?", "Kwa M-Pesa, Mixx by Yas, Airtel Money, HaloPesa au benki. Baada ya kulipa, weka namba ya muamala kwenye ukurasa wa Malipo na usajili unaongezwa."],
@@ -131,7 +131,7 @@ const C = {
     featH: "Everything a tender needs, from first sight to payment",
     feats: [
       ["New NeST tenders", "Open tenders that match your product words. Add them to your register in one click."],
-      ["EXO reads the tender document", "Pick the PDF and EXO lists every required document, where it goes and its conditions."],
+      ["EXO reads the tender document", "Pick the PDF and EXO lists every required document and where it goes, plus the items to supply and their quantities."],
       ["Document checklist and files", "Each document has a status. Upload files per requirement and see what is left before you submit."],
       ["Company document vault", "BRELA, TIN, tax clearance and licences stored once, with reminders before they expire."],
       ["Pricing and margin", "Cost, transport and bid price with margin worked out for you. Hidden from people who should not see it."],
@@ -168,7 +168,7 @@ const C = {
     faqH: "Frequently asked questions",
     faqs: [
       ["Is Tenda Desk connected to NeST?", "Tenda Desk reads the tender list NeST publishes openly and filters it for what you sell. It never signs in to your NeST account. You download tender documents from NeST, upload them here, and submit your bid on NeST as usual."],
-      ["How does the tender document reader work?", "Pick the tender document PDF you downloaded from NeST. EXO reads it and lists the required documents, their section and page. You decide which ones go on your checklist. Each company gets 30 reads a month."],
+      ["How does the tender document reader work?", "Pick the tender document PDF you downloaded from NeST. EXO reads it and lists the required documents, their section and page, plus the items to supply with quantities. You decide what to keep: documents go on your checklist, items under Supply. Each company gets 30 reads a month."],
       ["Is my data safe?", "Each company sees only its own data; this is enforced inside the database, not just on screen. Inside a company, people see what their role allows."],
       ["What happens after 14 days?", "The system asks you to choose a plan. Nothing is deleted; once you pay you carry on where you left off."],
       ["How do I pay?", "By M-Pesa, Mixx by Yas, Airtel Money, HaloPesa or bank. After paying, enter the transaction ID on the Billing page and your subscription is extended."],
