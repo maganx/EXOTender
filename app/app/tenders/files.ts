@@ -133,7 +133,8 @@ export async function addReadDocuments(tenderId: string, items: ReadItem[], summ
     const item = (where ? `${name} (${where})` : name).slice(0, 300);
     if (seen.has(item.toLowerCase())) continue;
     seen.add(item.toLowerCase());
-    rows.push({ tender_id: tenderId, item, qty: String(s.qty ?? "").trim().slice(0, 60) || null });
+    // Staggered timestamps keep the schedule's order on the Supply tab, which sorts by created_at.
+    rows.push({ tender_id: tenderId, item, qty: String(s.qty ?? "").trim().slice(0, 60) || null, created_at: new Date(Date.now() + rows.length).toISOString() });
   }
   if (rows.length) {
     const { error: e2 } = await supabase.from("deliveries").insert(rows);
