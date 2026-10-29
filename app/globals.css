@@ -82,6 +82,7 @@ main{padding-block:22px 60px}
 .arow:hover .at{text-decoration:underline}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
 .dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}.dot.ok{background:var(--ok)}
+.dot{flex:none}
 .at{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .am{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -246,7 +247,8 @@ a.btn{text-decoration:none}
 .auth-card p{margin:0;color:var(--muted)}
 .auth-card .brandmark{background:var(--band);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
 .err{background:var(--bad-soft);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:13.5px}
-.ok{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:13.5px}
+/* success notice; only on div so .chip.ok, .dot.ok and strong.ok keep their own shape */
+div.ok{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:13.5px}
 .page{display:flex;flex-direction:column;gap:16px}
 .detail-head{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px 0}
 .tabs a{display:inline-block;border-bottom:2px solid transparent;padding:9px 11px;font-weight:600;font-size:13px;color:var(--muted);white-space:nowrap;text-decoration:none}
@@ -309,3 +311,38 @@ details.sec summary.sum{cursor:pointer;font-weight:600;font-size:13.5px;color:va
 .lipa ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:3px;font-size:14px}
 .subbar{border-radius:10px;padding:9px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--warn-soft);color:var(--warn)}
 .subbar.bad{background:var(--bad-soft);color:var(--bad)}
+
+/* editable rows (supply, invoices): a grid on wide screens, small cards on phones */
+.lrows{display:flex;flex-direction:column}
+.lhead,.lrow{display:grid;gap:6px;align-items:center}
+.lrows.sup .lhead,.lrows.sup .lrow{grid-template-columns:minmax(140px,2fr) 80px 140px 110px 160px auto}
+.lrows.inv .lhead,.lrows.inv .lrow{grid-template-columns:120px 140px 1fr 1fr 140px auto}
+.lhead{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;background:var(--surface-2);padding:8px 6px;border-radius:8px}
+.lrow{padding:6px 0;border-bottom:1px solid var(--line)}
+.lrow .lf{display:contents}
+.lrow .lb{display:none}
+.lrow .lact{display:flex;gap:4px;justify-content:flex-end}
+@media (max-width:640px){
+  .lhead{display:none}
+  .lrows.sup .lrow,.lrows.inv .lrow{grid-template-columns:1fr 1fr;gap:8px;padding:12px 0}
+  .lrow .lf{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .lrow .lb{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .lrow .wide{grid-column:1/-1}
+  .lrow .lact{grid-column:1/-1}
+}
+/* tables that turn into cards on phones */
+@media (max-width:640px){
+  .rtable table{min-width:0!important}
+  .rtable thead{display:none}
+  .rtable tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .rtable tbody tr:last-child{border-bottom:0}
+  .rtable td{border:0;padding:0;display:block}
+  .rtable tbody tr:hover td{background:none}
+  .rtable td.full{flex-basis:100%}
+  .rtable td.end{margin-left:auto;text-align:right}
+  .rtable td.small{font-size:12.5px;color:var(--muted)}
+  .tabs{flex-wrap:wrap}
+  .mrow{grid-template-columns:1fr!important}
+  .mrow .mact{justify-content:flex-start}
+}
+.saved{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-bottom:10px}

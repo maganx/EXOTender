@@ -3,6 +3,7 @@ import { DueChip, Kpi, StageTag } from "@/components/bits";
 import { ACTIVE, STAGES, WON, canSeeMoney, daysUntil, fmtDate, money, nextAction, type Stage } from "@/lib/domain";
 import { getT } from "@/lib/i18n";
 import { loadTenders, requireOrg } from "@/lib/org";
+import { createClient } from "@/lib/supabase/server";
 
 const has = (list: readonly string[], s: string) => list.includes(s);
 
@@ -38,15 +39,29 @@ export default async function Overview() {
   const rate = won.length + lost.length ? Math.round((100 * won.length) / (won.length + lost.length)) + "%" : "—";
   const out = all.reduce((a, x) => a + x.summary.outstanding, 0);
 
-  const items = active
-    .map((x) => ({ x, na: nextAction(x, x.summary, t, lang) }))
-    .filter((i) => i.na)
-    .map((i) => ({ ...i, n: daysUntil(i.na!.due) }));
+  type Item = { key: string; href: string; title: string; text: string; due: string | null; n: number | null; stage?: Stage };
+  const items: Item[] = [];
+  for (const x of active) {
+    const na = nextAction(x, x.summary, t, lang);
+    if (na) items.push({ key: x.id, href: `/app/tenders/${x.id}`, title: x.title || x.tender_no, text: `${na.text} · ${x.entity ?? ""}`, due: na.due, n: daysUntil(na.due), stage: x.stage });
+  }
   for (const x of all) {
     if (x.summary.psSubmitted && x.summary.psExpiry && has(WON, x.stage) && x.stage !== "closed") {
       const n = daysUntil(x.summary.psExpiry);
-      if (n != null && n <= 30) items.push({ x, na: { text: `${t("ps_h")}: ${t("f_psExp").toLowerCase()} ${fmtDate(x.summary.psExpiry, lang)}`, due: x.summary.psExpiry }, n });
+      if (n != null && n <= 30)
+        items.push({ key: x.id + "ps", href: `/app/tenders/${x.id}?tab=contract`, title: x.title || x.tender_no, text: `${t("ps_h")}: ${t("f_psExp").toLowerCase()} ${fmtDate(x.summary.psExpiry, lang)}`, due: x.summary.psExpiry, n });
     }
+  }
+  // BRELA, tax clearance and other company papers that run out soon are needed for every bid
+  const { data: papers } = await (await createClient())
+    .from("company_documents")
+    .select("id, title, expires_on")
+    .eq("org_id", ctx.orgId)
+    .not("expires_on", "is", null);
+  for (const d of papers ?? []) {
+    const n = daysUntil(d.expires_on);
+    if (n != null && n <= 30)
+      items.push({ key: d.id, href: "/app/documents", title: d.title, text: t("doc_expiring", { d: fmtDate(d.expires_on, lang) }), due: d.expires_on, n });
   }
   items.sort((a, b) => (a.n ?? 9999) - (b.n ?? 9999));
 
@@ -69,16 +84,14 @@ export default async function Overview() {
           <h2>{t("needs")}</h2>
           <div className="alist">
             {items.length ? (
-              items.slice(0, 12).map(({ x, na, n }, i) => (
-                <Link key={x.id + i} className="arow" href={`/app/tenders/${x.id}`} style={{ textDecoration: "none" }}>
-                  <span className={`dot ${n == null ? "" : n <= 3 ? "bad" : n <= 7 ? "warn" : "ok"}`} />
+              items.slice(0, 12).map((i) => (
+                <Link key={i.key} className="arow" href={i.href} style={{ textDecoration: "none" }}>
+                  <span className={`dot ${i.n == null ? "" : i.n <= 3 ? "bad" : i.n <= 7 ? "warn" : "ok"}`} />
                   <span style={{ minWidth: 0 }}>
-                    <div className="at">{x.title || x.tender_no}</div>
-                    <div className="am">
-                      {na!.text} · {x.entity}
-                    </div>
+                    <div className="at">{i.title}</div>
+                    <div className="am">{i.text}</div>
                   </span>
-                  <span>{na!.due ? <DueChip date={na!.due} t={t} /> : <StageTag stage={x.stage} t={t} />}</span>
+                  <span>{i.due ? <DueChip date={i.due} t={t} /> : i.stage ? <StageTag stage={i.stage} t={t} /> : null}</span>
                 </Link>
               ))
             ) : (

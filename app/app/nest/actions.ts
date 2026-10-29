@@ -24,7 +24,7 @@ export async function saveKeywords(fd: FormData) {
     .update({ settings: { ...((data?.settings as object) ?? {}), nest_keywords: keywords } })
     .eq("id", ctx.orgId);
   revalidatePath("/app/nest");
-  redirect(`/app/nest${error ? `?msg=${encodeURIComponent(error.message)}` : ""}`);
+  redirect(`/app/nest${error ? `?msg=${encodeURIComponent(error.message)}` : "?saved=1"}`);
 }
 
 export async function addFromNest(fd: FormData) {

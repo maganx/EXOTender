@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as A from "../actions";
 import { deleteTenderFile } from "../files";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { FileUpload, TenderReader } from "@/components/TenderUploads";
 import { DueChip, StageTag } from "@/components/bits";
 import {
   STAGES, addDays, canEdit, canEditPayments, canSeeMoney, fmtDate, isAdmin, money, nextAction, toLocalInput,
   type Contract, type Delivery, type Invoice, type Pricing, type Stage, type Summary, type TDoc, type Tender,
 } from "@/lib/domain";
-import { getT, type Key, type T } from "@/lib/i18n";
+import { friendlyError, getT, type Key, type T } from "@/lib/i18n";
 import { one, requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
@@ -165,7 +166,8 @@ export default async function TenderPage(props: { params: Promise<{ id: string }
             <StageBtn stage={x.stage === "lost" ? "eval" : "payment"} label={t("reopen")} cls="btn sm" />
           </div>
         )}
-        {searchParams.msg && <div className="err" style={{ marginBottom: 10 }}>{searchParams.msg}</div>}
+        {searchParams.msg && <div className="err" style={{ marginBottom: 10 }}>{friendlyError(searchParams.msg, t)}</div>}
+        {searchParams.ok && !searchParams.msg && <div className="saved" role="status">✓ {t("saved")}</div>}
         <div className="tabs" role="tablist">
           {TABS.map((k) => (
             <Link key={k} href={`/app/tenders/${x.id}?tab=${k}`} aria-current={tab === k ? "page" : undefined}>
@@ -227,9 +229,9 @@ export default async function TenderPage(props: { params: Promise<{ id: string }
           <summary>{t("del")}</summary>
           <form action={A.deleteTender} style={{ marginTop: 10 }}>
             <input type="hidden" name="id" value={x.id} />
-            <button className="btn danger sm" type="submit">
+            <ConfirmButton className="btn danger sm" ask={t("confirm_tender")}>
               {t("delConfirm")}
-            </button>
+            </ConfirmButton>
           </form>
         </details>
       )}
@@ -304,46 +306,42 @@ export default async function TenderPage(props: { params: Promise<{ id: string }
       {tab === "supply" && (
         <section className="sec">
           <h3>{t("sup_h")}</h3>
-          <div className="rows">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("d_item")}</th>
-                  <th>{t("d_qty")}</th>
-                  <th>{t("d_date")}</th>
-                  <th>{t("d_dn")}</th>
-                  <th>{t("d_status")}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {dels.map((r) => (
-                  <tr key={r.id}>
-                    <td colSpan={6} style={{ padding: 0, border: 0 }}>
-                      <form action={A.saveDelivery} style={{ display: "grid", gridTemplateColumns: "minmax(140px,2fr) 80px 140px 110px 160px auto", gap: 6, padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
-                        <input type="hidden" name="id" value={x.id} />
-                        <input type="hidden" name="row_id" value={r.id} />
-                        <fieldset disabled={!edit} style={{ display: "contents" }}>
-                          <input className="mini" name="item" defaultValue={r.item} aria-label={t("d_item")} />
-                          <input className="mini" name="qty" defaultValue={r.qty ?? ""} aria-label={t("d_qty")} />
-                          <input className="mini" type="date" name="delivery_date" defaultValue={r.delivery_date ?? ""} aria-label={t("d_date")} />
-                          <input className="mini" name="delivery_note" defaultValue={r.delivery_note ?? ""} aria-label={t("d_dn")} />
-                          <select className="mini" name="status" defaultValue={r.status} aria-label={t("d_status")}>
-                            <option value="planned">{t("dl_planned")}</option>
-                            <option value="delivered">{t("dl_delivered")}</option>
-                            <option value="accepted">{t("dl_accepted")}</option>
-                          </select>
-                          <span style={{ display: "flex", gap: 4 }}>
-                            <button className="btn sm" type="submit">{t("save")}</button>
-                            <button className="xbtn" type="submit" name="remove" value="1" aria-label={t("remove")}>×</button>
-                          </span>
-                        </fieldset>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="lrows sup">
+            {dels.length > 0 && (
+              <div className="lhead" aria-hidden="true">
+                <span>{t("d_item")}</span>
+                <span>{t("d_qty")}</span>
+                <span>{t("d_date")}</span>
+                <span>{t("d_dn")}</span>
+                <span>{t("d_status")}</span>
+                <span />
+              </div>
+            )}
+            {dels.map((r) => (
+              <form key={r.id} action={A.saveDelivery} className="lrow">
+                <input type="hidden" name="id" value={x.id} />
+                <input type="hidden" name="row_id" value={r.id} />
+                <fieldset disabled={!edit} style={{ display: "contents" }}>
+                  <label className="lf wide"><span className="lb">{t("d_item")}</span><input className="mini" name="item" defaultValue={r.item} aria-label={t("d_item")} /></label>
+                  <label className="lf"><span className="lb">{t("d_qty")}</span><input className="mini" name="qty" defaultValue={r.qty ?? ""} aria-label={t("d_qty")} /></label>
+                  <label className="lf"><span className="lb">{t("d_date")}</span><input className="mini" type="date" name="delivery_date" defaultValue={r.delivery_date ?? ""} aria-label={t("d_date")} /></label>
+                  <label className="lf"><span className="lb">{t("d_dn")}</span><input className="mini" name="delivery_note" defaultValue={r.delivery_note ?? ""} aria-label={t("d_dn")} /></label>
+                  <label className="lf"><span className="lb">{t("d_status")}</span>
+                    <select className="mini" name="status" defaultValue={r.status} aria-label={t("d_status")}>
+                      <option value="planned">{t("dl_planned")}</option>
+                      <option value="delivered">{t("dl_delivered")}</option>
+                      <option value="accepted">{t("dl_accepted")}</option>
+                    </select>
+                  </label>
+                  {edit && (
+                    <span className="lact">
+                      <button className="btn sm" type="submit">{t("save")}</button>
+                      <ConfirmButton className="xbtn" name="remove" value="1" label={t("remove")} ask={t("confirm_remove")}>×</ConfirmButton>
+                    </span>
+                  )}
+                </fieldset>
+              </form>
+            ))}
           </div>
           {edit && (
             <form action={A.addDelivery} className="inline addrow">
@@ -359,42 +357,36 @@ export default async function TenderPage(props: { params: Promise<{ id: string }
         (seeMoney ? (
           <section className="sec">
             <h3>{t("pay_h")}</h3>
-            <div className="rows">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t("p_inv")}</th>
-                    <th>{t("p_date")}</th>
-                    <th>{t("p_amt")}</th>
-                    <th>{t("p_paid")}</th>
-                    <th>{t("p_paidOn")}</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {invs.map((r) => (
-                    <tr key={r.id}>
-                      <td colSpan={6} style={{ padding: 0, border: 0 }}>
-                        <form action={A.saveInvoice} style={{ display: "grid", gridTemplateColumns: "120px 140px 1fr 1fr 140px auto", gap: 6, padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
-                          <input type="hidden" name="id" value={x.id} />
-                          <input type="hidden" name="row_id" value={r.id} />
-                          <fieldset disabled={!editPay} style={{ display: "contents" }}>
-                            <input className="mini" name="invoice_no" defaultValue={r.invoice_no ?? ""} aria-label={t("p_inv")} />
-                            <input className="mini" type="date" name="invoice_date" defaultValue={r.invoice_date ?? ""} aria-label={t("p_date")} />
-                            <input className="mini" name="amount" inputMode="numeric" defaultValue={fmtNum(r.amount)} aria-label={t("p_amt")} />
-                            <input className="mini" name="paid" inputMode="numeric" defaultValue={fmtNum(r.paid)} aria-label={t("p_paid")} />
-                            <input className="mini" type="date" name="paid_on" defaultValue={r.paid_on ?? ""} aria-label={t("p_paidOn")} />
-                            <span style={{ display: "flex", gap: 4 }}>
-                              <button className="btn sm" type="submit">{t("save")}</button>
-                              <button className="xbtn" type="submit" name="remove" value="1" aria-label={t("remove")}>×</button>
-                            </span>
-                          </fieldset>
-                        </form>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="lrows inv">
+              {invs.length > 0 && (
+                <div className="lhead" aria-hidden="true">
+                  <span>{t("p_inv")}</span>
+                  <span>{t("p_date")}</span>
+                  <span>{t("p_amt")}</span>
+                  <span>{t("p_paid")}</span>
+                  <span>{t("p_paidOn")}</span>
+                  <span />
+                </div>
+              )}
+              {invs.map((r) => (
+                <form key={r.id} action={A.saveInvoice} className="lrow">
+                  <input type="hidden" name="id" value={x.id} />
+                  <input type="hidden" name="row_id" value={r.id} />
+                  <fieldset disabled={!editPay} style={{ display: "contents" }}>
+                    <label className="lf"><span className="lb">{t("p_inv")}</span><input className="mini" name="invoice_no" defaultValue={r.invoice_no ?? ""} aria-label={t("p_inv")} /></label>
+                    <label className="lf"><span className="lb">{t("p_date")}</span><input className="mini" type="date" name="invoice_date" defaultValue={r.invoice_date ?? ""} aria-label={t("p_date")} /></label>
+                    <label className="lf"><span className="lb">{t("p_amt")}</span><input className="mini" name="amount" inputMode="numeric" defaultValue={fmtNum(r.amount)} aria-label={t("p_amt")} /></label>
+                    <label className="lf"><span className="lb">{t("p_paid")}</span><input className="mini" name="paid" inputMode="numeric" defaultValue={fmtNum(r.paid)} aria-label={t("p_paid")} /></label>
+                    <label className="lf"><span className="lb">{t("p_paidOn")}</span><input className="mini" type="date" name="paid_on" defaultValue={r.paid_on ?? ""} aria-label={t("p_paidOn")} /></label>
+                    {editPay && (
+                      <span className="lact">
+                        <button className="btn sm" type="submit">{t("save")}</button>
+                        <ConfirmButton className="xbtn" name="remove" value="1" label={t("remove")} ask={t("confirm_remove")}>×</ConfirmButton>
+                      </span>
+                    )}
+                  </fieldset>
+                </form>
+              ))}
             </div>
             {editPay && (
               <form action={A.addInvoice} className="inline addrow">
@@ -479,7 +471,7 @@ async function DocsTab({ x, docs, edit, t, orgId, lang }: { x: Tender; docs: TDo
                   <form action={deleteTenderFile} className="inline-form">
                     <input type="hidden" name="id" value={x.id} />
                     <input type="hidden" name="file" value={f.id} />
-                    <button className="xbtn" type="submit" aria-label={t("remove")}>×</button>
+                    <ConfirmButton className="xbtn" label={t("remove")} ask={t("confirm_file")}>×</ConfirmButton>
                   </form>
                 )}
               </li>
@@ -527,10 +519,12 @@ async function DocsTab({ x, docs, edit, t, orgId, lang }: { x: Tender; docs: TDo
                   </select>
                 </span>
               </span>
-              <span style={{ display: "flex", gap: 4 }}>
-                <button className="btn sm" type="submit">{t("save")}</button>
-                <button className="xbtn" type="submit" name="remove" value="1" aria-label={t("remove")}>×</button>
-              </span>
+              {edit && (
+                <span style={{ display: "flex", gap: 4 }}>
+                  <button className="btn sm" type="submit">{t("save")}</button>
+                  <ConfirmButton className="xbtn" name="remove" value="1" label={t("remove")} ask={t("confirm_remove")}>×</ConfirmButton>
+                </span>
+              )}
             </fieldset>
           </form>
         ))}

@@ -1,8 +1,9 @@
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { siteUrl } from "@/lib/site";
 import { cancelInvite, invite, removeMember, resendInvite, setRole } from "./actions";
 import { emailConfigured } from "@/lib/email";
 import { ROLES, fmtDate, isAdmin, type Role } from "@/lib/domain";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,9 +37,10 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
           <p>{t("team_s")}</p>
         </div>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       {searchParams.sent && <div className="ok">{t("inv_sent")}</div>}
       {searchParams.nomail && <div className="ok">{t("inv_nomail")}</div>}
+      {searchParams.saved && <div className="saved" role="status">✓ {t("saved")}</div>}
       <div className="grid2">
         <section className="panel-box">
           <h2>{t("members")}</h2>
@@ -47,7 +49,7 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
               const name = people?.find((p) => p.id === m.user_id)?.full_name || "—";
               const me = m.user_id === ctx.userId;
               return (
-                <div key={m.user_id} className="arow" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                <div key={m.user_id} className="arow mrow" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
                   <span style={{ minWidth: 0 }}>
                     <div className="at">
                       {name} {me && <span className="am">({t("you")})</span>}
@@ -55,7 +57,7 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
                     <div className="am">{t(`r_${m.role as Role}`)}</div>
                   </span>
                   {admin && !me && (m.role !== "owner" || ctx.role === "owner") ? (
-                    <span style={{ display: "flex", gap: 6 }}>
+                    <span className="mact" style={{ display: "flex", gap: 6 }}>
                       <form action={setRole} className="inline">
                         <input type="hidden" name="user" value={m.user_id} />
                         <select className="mini" name="role" defaultValue={m.role} aria-label={t("role")}>
@@ -69,7 +71,7 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
                       </form>
                       <form action={removeMember}>
                         <input type="hidden" name="user" value={m.user_id} />
-                        <button className="xbtn" type="submit" aria-label={t("remove")}>×</button>
+                        <ConfirmButton className="xbtn" label={t("remove")} ask={t("confirm_member")}>×</ConfirmButton>
                       </form>
                     </span>
                   ) : (
@@ -141,7 +143,7 @@ export default async function TeamPage(props: { searchParams: Promise<Record<str
                     </span>
                     <form action={cancelInvite}>
                       <input type="hidden" name="inv" value={i.id} />
-                      <button className="xbtn" type="submit" aria-label={t("cancel")}>×</button>
+                      <ConfirmButton className="xbtn" label={t("cancel")} ask={t("confirm_invite")}>×</ConfirmButton>
                     </form>
                   </div>
                 ))}

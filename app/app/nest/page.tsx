@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addFromNest, saveKeywords } from "./actions";
 import { DueChip } from "@/components/bits";
 import { canEdit, daysUntil, fmtDate, fromLocalInput, isAdmin } from "@/lib/domain";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 import { DEFAULT_KEYWORDS, fetchPublished, matcher, type NestTender } from "@/lib/nest";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
@@ -59,7 +59,8 @@ export default async function NestPage(props: { searchParams: Promise<Record<str
           {showAll ? t("nest_mine") : t("nest_all")}
         </Link>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
+      {searchParams.saved && <div className="saved" role="status">✓ {t("saved")}</div>}
       {searchParams.added && <div className="ok">{t("nest_done", { n: searchParams.added })}</div>}
 
       {isAdmin(ctx.role) && (

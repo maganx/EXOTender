@@ -16,7 +16,7 @@ async function admin() {
 
 function back(error?: string | null): never {
   revalidatePath("/app/admin");
-  redirect(`/app/admin${error ? `?msg=${encodeURIComponent(error)}` : ""}`);
+  redirect(`/app/admin${error ? `?msg=${encodeURIComponent(error)}` : "?saved=1"}`);
 }
 
 export async function reviewPayment(fd: FormData) {

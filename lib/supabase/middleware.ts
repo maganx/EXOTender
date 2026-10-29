@@ -6,6 +6,10 @@ const PUBLIC = ["/login", "/auth", "/invite", "/api/selcom/"];
 export async function updateSession(request: NextRequest) {
   // pages read the path to decide what an expired subscription may still open
   request.headers.set("x-path", request.nextUrl.pathname);
+  // the language and theme switches return to the page the person was on
+  const here = request.nextUrl.clone();
+  for (const k of ["msg", "ok", "saved", "sent", "paid", "closed", "added", "checked", "nomail", "error"]) here.searchParams.delete(k);
+  request.headers.set("x-url", here.pathname + here.search);
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

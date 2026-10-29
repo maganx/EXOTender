@@ -66,8 +66,9 @@ export async function resendInvite(fd: FormData) {
 }
 
 export async function cancelInvite(fd: FormData) {
-  const { error } = await (await createClient()).from("invitations").delete().eq("id", String(fd.get("inv")));
-  back(error?.message);
+  const ctx = await requireOrg();
+  const { error } = await (await createClient()).from("invitations").delete().eq("id", String(fd.get("inv"))).eq("org_id", ctx.orgId);
+  back(error?.message, "saved");
 }
 
 export async function setRole(fd: FormData) {
@@ -75,11 +76,11 @@ export async function setRole(fd: FormData) {
   const role = String(fd.get("role"));
   if (!ROLES.includes(role as never)) back("bad role");
   const { error } = await (await createClient()).from("memberships").update({ role }).eq("org_id", ctx.orgId).eq("user_id", String(fd.get("user")));
-  back(error?.message);
+  back(error?.message, "saved");
 }
 
 export async function removeMember(fd: FormData) {
   const ctx = await requireOrg();
   const { error } = await (await createClient()).from("memberships").delete().eq("org_id", ctx.orgId).eq("user_id", String(fd.get("user")));
-  back(error?.message);
+  back(error?.message, "saved");
 }

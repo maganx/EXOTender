@@ -36,7 +36,7 @@ export default async function TenderList(props: { searchParams: Promise<Record<s
           {t("filter")}
         </button>
       </form>
-      <div className="tbl-wrap">
+      <div className="tbl-wrap rtable">
         <table>
           <thead>
             <tr>
@@ -54,10 +54,10 @@ export default async function TenderList(props: { searchParams: Promise<Record<s
                 const na = nextAction(x, x.summary, t, lang);
                 return (
                   <tr key={x.id}>
-                    <td className="num" style={{ fontSize: 12.5 }}>
+                    <td className="num full small" style={{ fontSize: 12.5 }}>
                       <Link href={`/app/tenders/${x.id}`}>{x.tender_no}</Link>
                     </td>
-                    <td>
+                    <td className="full">
                       <Link href={`/app/tenders/${x.id}`} style={{ fontWeight: 600, textDecoration: "none" }}>
                         {x.title}
                       </Link>
@@ -67,7 +67,7 @@ export default async function TenderList(props: { searchParams: Promise<Record<s
                     <td>
                       <StageTag stage={x.stage} t={t} />
                     </td>
-                    <td className="num">
+                    <td className="num end">
                       {fmtDate(x.deadline, lang, true)}
                       {(x.stage === "found" || x.stage === "prep") && (
                         <>
@@ -76,8 +76,8 @@ export default async function TenderList(props: { searchParams: Promise<Record<s
                         </>
                       )}
                     </td>
-                    {showMoney && <td className="r num">{money(x.summary.value)}</td>}
-                    <td>{na?.text ?? "—"}</td>
+                    {showMoney && <td className="r num small">{x.summary.value ? money(x.summary.value) : "—"}</td>}
+                    <td className="full small">{na?.text ?? "—"}</td>
                   </tr>
                 );
               })

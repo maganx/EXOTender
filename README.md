@@ -63,6 +63,14 @@ Kampuni inachagua kifurushi na kuweka namba ya simu; inapokea ombi la PIN. Webho
 - Supabase → Authentication → URL Configuration: Site URL = anwani ya tovuti, na Redirect URLs iwe na `https://<tovuti>/**`.
 - Link za email zinatumia `token_hash`, kwa hiyo zinafunguka kwenye simu au kompyuta yoyote, si lazima ile aliyojisajilia.
 
+## Usalama wa ziada / Tightening (0005)
+
+Endesha `supabase/migrations/0005_tighten.sql`. Inahakikisha:
+- Msimamizi (admin) hawezi kumwondoa mmiliki; mmiliki pekee ndiye anaweza.
+- Mtu anaingia kampuni kwa kukubali mwaliko tu, si kwa kuongezwa moja kwa moja.
+- Kufuta mtumiaji kwenye Supabase Auth, au kufuta kampuni, hakuzuiliwi tena na sheria ya "mmiliki mmoja".
+- Rekodi za faili zinabaki ndani ya folda ya kampuni na tenda yake.
+
 ## Kuendesha kwenye kompyuta / Local
 
 ```bash
@@ -82,4 +90,9 @@ psql -d test -f supabase/tests/grants.sql
 psql -d test -f supabase/tests/test.sql
 psql -d test -f supabase/migrations/0002_files_billing.sql
 psql -d test -f supabase/tests/test_0002.sql
+psql -d test -f supabase/migrations/0003_selcom.sql
+psql -d test -f supabase/tests/test_0003.sql
+psql -d test -f supabase/migrations/0004_invites_email.sql
+psql -d test -f supabase/migrations/0005_tighten.sql
+psql -d test -f supabase/tests/test_0005.sql
 ```

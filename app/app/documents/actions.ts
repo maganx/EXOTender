@@ -10,7 +10,7 @@ const MAX = 10 * 1024 * 1024;
 
 function back(error?: string | null): never {
   revalidatePath("/app/documents");
-  redirect(`/app/documents${error ? `?msg=${encodeURIComponent(error)}` : ""}`);
+  redirect(`/app/documents${error ? `?msg=${encodeURIComponent(error)}` : "?saved=1"}`);
 }
 
 export async function uploadDoc(fd: FormData) {
@@ -39,7 +39,7 @@ export async function deleteDoc(fd: FormData) {
   const ctx = await requireOrg();
   const supabase = (await createClient());
   const { data } = await supabase.from("company_documents").select("storage_path").eq("id", String(fd.get("doc"))).eq("org_id", ctx.orgId).maybeSingle();
-  if (!data) back();
+  if (!data) back("not allowed");
   const { error } = await supabase.from("company_documents").delete().eq("id", String(fd.get("doc"))).eq("org_id", ctx.orgId);
   if (!error) await supabase.storage.from("company-docs").remove([data.storage_path]);
   back(error?.message);

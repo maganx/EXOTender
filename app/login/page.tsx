@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requestPasswordReset, resendConfirmation, signIn, signUp } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 
 export default async function LoginPage(props: { searchParams: Promise<Record<string, string | undefined>> }) {
   const searchParams = await props.searchParams;
@@ -15,7 +15,7 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
       <AuthShell back="/login?mode=forgot">
         <h1>{t("forgot_t")}</h1>
         <p>{t("forgot_s")}</p>
-        {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+        {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
         {searchParams.sent && <div className="ok">{t("forgot_sent")}</div>}
         <form action={requestPasswordReset} className="fields" style={{ gridTemplateColumns: "1fr" }}>
           <div className="fld">
@@ -36,7 +36,7 @@ export default async function LoginPage(props: { searchParams: Promise<Record<st
       <h1>{signup ? t("signup") : t("login_t")}</h1>
       <p>{t("login_s")}</p>
       {searchParams.error && <div className="err">{t("badLogin")}</div>}
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       {searchParams.sent && <div className="ok">{t("checkEmail")}</div>}
       {(searchParams.unconfirmed || searchParams.expired) && (
         <>

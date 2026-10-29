@@ -1,6 +1,6 @@
 import { createOrganization } from "@/app/actions";
 import { AuthShell } from "@/components/AuthShell";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 
 export default async function Onboarding(props: { searchParams: Promise<Record<string, string | undefined>> }) {
   const searchParams = await props.searchParams;
@@ -9,7 +9,7 @@ export default async function Onboarding(props: { searchParams: Promise<Record<s
     <AuthShell back="/onboarding">
       <h1>{t("onb_t")}</h1>
       <p>{t("onb_s")}</p>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       <form action={createOrganization} className="fields" style={{ gridTemplateColumns: "1fr" }}>
         <div className="fld">
           <label htmlFor="name">{t("orgName")}</label>

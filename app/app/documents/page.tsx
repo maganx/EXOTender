@@ -1,6 +1,7 @@
 import { deleteDoc, uploadDoc } from "./actions";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { STD_DOCS, canEdit, daysUntil, fmtDate, stdLabel } from "@/lib/domain";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,7 +25,8 @@ export default async function Vault(props: { searchParams: Promise<Record<string
           <p>{t("vault_s")}</p>
         </div>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
+      {searchParams.saved && <div className="saved" role="status">✓ {t("saved")}</div>}
       {edit && (
         <form action={uploadDoc} className="sec">
           <div className="fields">
@@ -57,7 +59,7 @@ export default async function Vault(props: { searchParams: Promise<Record<string
           </div>
         </form>
       )}
-      <div className="tbl-wrap">
+      <div className="tbl-wrap rtable">
         <table style={{ minWidth: 600 }}>
           <thead>
             <tr>
@@ -74,14 +76,14 @@ export default async function Vault(props: { searchParams: Promise<Record<string
                 const url = urlFor(d.storage_path);
                 return (
                   <tr key={d.id}>
-                    <td>{d.kind === "other" ? "—" : stdLabel(d.kind, lang)}</td>
-                    <td style={{ fontWeight: 600 }}>{d.title}</td>
+                    <td className="full small">{d.kind === "other" ? "—" : stdLabel(d.kind, lang)}</td>
+                    <td className="full" style={{ fontWeight: 600 }}>{d.title}</td>
                     <td className="num">
                       {fmtDate(d.expires_on, lang)}{" "}
                       {n != null && n < 0 && <span className="chip bad">{t("expired")}</span>}
                       {n != null && n >= 0 && n <= 30 && <span className="chip warn">{t("inDays", { n })}</span>}
                     </td>
-                    <td style={{ whiteSpace: "nowrap" }}>
+                    <td className="end" style={{ whiteSpace: "nowrap" }}>
                       {url && (
                         <a className="btn sm" href={url} target="_blank" rel="noopener noreferrer">
                           {t("open")}
@@ -90,7 +92,7 @@ export default async function Vault(props: { searchParams: Promise<Record<string
                       {edit && (
                         <form action={deleteDoc} className="inline-form">
                           <input type="hidden" name="doc" value={d.id} />
-                          <button className="xbtn" type="submit" aria-label={t("remove")}>×</button>
+                          <ConfirmButton className="xbtn" label={t("remove")} ask={t("confirm_doc")}>×</ConfirmButton>
                         </form>
                       )}
                     </td>

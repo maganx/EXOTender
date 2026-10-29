@@ -381,6 +381,19 @@ const W = {
   c_amount: ["Kiasi", "Amount"],
   c_date: ["Tarehe", "Date"],
   lots: ["Lots", "Lots"],
+  // confirmations and plain-language errors
+  confirm_remove: ["Una uhakika unataka kuondoa mstari huu?", "Remove this line?"],
+  confirm_file: ["Futa faili hili? Halitarudi.", "Delete this file? It cannot be recovered."],
+  confirm_tender: ["Futa tenda hii pamoja na nyaraka, malipo na kumbukumbu zake zote? Haitarudi.", "Delete this tender with all its documents, payments and log? It cannot be recovered."],
+  confirm_member: ["Ondoa mtu huyu kwenye kampuni? Hataweza kuingia tena mpaka umualike upya.", "Remove this person from the company? They lose access until invited again."],
+  confirm_invite: ["Futa mwaliko huu? Link yake haitafanya kazi tena.", "Cancel this invitation? Its link will stop working."],
+  confirm_doc: ["Futa nyaraka hii ya kampuni? Haitarudi.", "Delete this company document? It cannot be recovered."],
+  err_dup: ["Tenda yenye namba hii tayari ipo kwenye rejista yenu.", "A tender with this number is already in your register."],
+  err_denied: ["Huna ruhusa ya kufanya hivi. Muombe msimamizi wa kampuni.", "You are not allowed to do this. Ask your company admin."],
+  err_owner: ["Kampuni lazima ibaki na mmiliki angalau mmoja, na mmiliki pekee ndiye anaweza kubadilisha wamiliki.", "A company must keep at least one owner, and only an owner can change owners."],
+  err_net: ["Mtandao umesumbua. Jaribu tena.", "The connection failed. Please try again."],
+  err_size: ["Faili ni kubwa mno.", "The file is too large."],
+  doc_expiring: ["Nyaraka ya kampuni inaisha: {d}", "Company document expires: {d}"],
 } as const satisfies Record<string, readonly [string, string]>;
 
 export type Key = keyof typeof W;
@@ -403,6 +416,17 @@ export function translator(lang: Lang) {
 }
 
 export type T = ReturnType<typeof translator>;
+
+/** Database and network errors in words a user understands; anything unknown is shown as it came. */
+export function friendlyError(msg: string, t: T) {
+  const m = msg.toLowerCase();
+  if (m.includes("duplicate key") && m.includes("tender_no")) return t("err_dup");
+  if (m.includes("row-level security") || m.includes("permission denied") || m === "not allowed") return t("err_denied");
+  if (m.includes("owner")) return t("err_owner");
+  if (m.includes("fetch failed") || m.includes("network") || m.includes("timeout")) return t("err_net");
+  if (m.includes("payload too large") || m.includes("exceeded the maximum") || m.includes("max 10 mb")) return t("err_size");
+  return msg;
+}
 
 export async function getT() {
   const lang = await getLang();

@@ -1,6 +1,6 @@
 import { checkSelcom, payWithSelcom, reportPayment } from "./actions";
 import { canEditPayments, fmtDate, money } from "@/lib/domain";
-import { getT, type Key } from "@/lib/i18n";
+import { friendlyError, getT, type Key } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 import { selcomConfigured } from "@/lib/selcom";
@@ -38,7 +38,7 @@ export default async function Billing(props: { searchParams: Promise<Record<stri
           <p>{t("bill_s")}</p>
         </div>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       {searchParams.sent && <div className="ok">{t("bill_sent")}</div>}
       {searchParams.paid && <div className="ok">{t("sel_paid")}</div>}
       {searchParams.closed && <div className="err">{t("sel_closed")}</div>}

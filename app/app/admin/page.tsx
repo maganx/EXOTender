@@ -3,7 +3,7 @@ import { enableSelcom, extendCompany, reviewPayment, savePayInfo } from "./actio
 import { siteUrl } from "@/lib/site";
 import { selcomConfigured } from "@/lib/selcom";
 import { fmtDate, money } from "@/lib/domain";
-import { getT, type Key } from "@/lib/i18n";
+import { friendlyError, getT, type Key } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,8 +33,9 @@ export default async function Admin(props: { searchParams: Promise<Record<string
           <p>{t("adm_s")}</p>
         </div>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       {searchParams.selcom && <div className="notice">{searchParams.selcom}</div>}
+      {searchParams.saved && <div className="saved" role="status">✓ {t("saved")}</div>}
 
       <section className="sec">
         <h3>{t("adm_pending")}</h3>

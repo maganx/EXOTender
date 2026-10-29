@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createTender } from "../actions";
 import { canEdit } from "@/lib/domain";
-import { getT } from "@/lib/i18n";
+import { friendlyError, getT } from "@/lib/i18n";
 import { requireOrg } from "@/lib/org";
 
 export default async function NewTender(props: { searchParams: Promise<Record<string, string | undefined>> }) {
@@ -17,7 +17,7 @@ export default async function NewTender(props: { searchParams: Promise<Record<st
           <h1>{t("newT")}</h1>
         </div>
       </div>
-      {searchParams.msg && <div className="err">{searchParams.msg}</div>}
+      {searchParams.msg && <div className="err">{friendlyError(searchParams.msg, t)}</div>}
       <form action={createTender} className="sec">
         <div className="fields">
           <div className="fld">
