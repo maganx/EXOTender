@@ -346,3 +346,6 @@ details.sec summary.sum{cursor:pointer;font-weight:600;font-size:13.5px;color:va
   .mrow .mact{justify-content:flex-start}
 }
 .saved{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-bottom:10px}
+
+/* print: monthly report for the board */
+@media print{.band,.no-print,.subbar{display:none!important}.page{padding-top:0}.kpis{grid-template-columns:repeat(3,1fr)}.tbl-wrap{overflow:visible}}
