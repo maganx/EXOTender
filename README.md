@@ -21,6 +21,7 @@ Multi-company tender management for Tanzanian government tenders (NeST), built w
 3. **Hosting (Cloudflare Workers):** Cloudflare dashboard → Workers & Pages → Create → Import a repository → chagua repository hii, kisha:
    - Settings → Builds → tab **Production**: branch `main`, Build command `npx opennextjs-cloudflare build`, Deploy command `npx wrangler deploy`
    - Tab **Previews Base** (matawi ya PR): Build command `npx opennextjs-cloudflare build`, Deploy command `npx wrangler preview` (inahitaji `"previews": {}` kwenye `wrangler.jsonc`, tayari ipo)
+   - Push kwenye `main` ikijengwa kama Preview (link ya build ina `/previews/main/`) au isijengwe kabisa, hakikisha **Production branch** ni `main` na umebonyeza Save; kisha push inayofuata kwenye `main` itaenda hewani.
    - Build variables / Variables and secrets (zote mbili, build na runtime):
      - `NEXT_PUBLIC_SUPABASE_URL` = `https://hyizioycuwifddtrzbri.supabase.co`
      - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase → Project Settings → API → `anon public` key
