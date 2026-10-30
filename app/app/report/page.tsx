@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { Kpi } from "@/components/bits";
 import { PrintButton } from "@/components/PrintButton";
 import { MON, WON, canSeeMoney, money, type Stage } from "@/lib/domain";
-import { getT } from "@/lib/i18n";
+import { getT, translator } from "@/lib/i18n";
 import { one, requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
@@ -160,12 +159,19 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
   };
   const curPay = avg(cur.payDays);
   const fmtDay = (d: string) => `${+d.slice(8)} ${MON[lang][+d.slice(5, 7) - 1]} ${d.slice(0, 4)}`;
+  const rangeView = isRange || searchParams.view === "range";
   const q0 = shiftMonth(thisMonth, -((+thisMonth.slice(5) - 1) % 3));
-  const presets: [string, string, string][] = [
-    [t("rep_pQuarter"), q0 + "-01", today],
-    [t("rep_pYear"), thisMonth.slice(0, 4) + "-01-01", today],
-    [t("rep_p12"), shiftMonth(thisMonth, -11) + "-01", today],
+  const presets: { name: string; href: string; on: boolean }[] = [
+    { name: t("rep_pMonth"), href: "/app/report", on: !isRange && sel === thisMonth },
+    ...([
+      [t("rep_pQuarter"), q0 + "-01"],
+      [t("rep_pYear"), thisMonth.slice(0, 4) + "-01-01"],
+      [t("rep_p12"), shiftMonth(thisMonth, -11) + "-01"],
+    ] as const).map(([name, a]) => ({ name, href: `/app/report?from=${a}&to=${today}`, on: isRange && from === a && to === today })),
   ];
+  const rows = [...months.values()];
+  const wonV = showMoney ? money(cur.wonValue, true) : cur.won;
+  const periodWord = t(isRange ? "rep_period" : "rep_thisMonth");
 
   return (
     <>
@@ -176,63 +182,105 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
             {ctx.orgName} · {t("rep_s")}
           </p>
         </div>
-        <div className="no-print" style={{ display: "grid", gap: 8, justifyItems: "end" }}>
-          <form className="filters" method="get" style={{ marginBottom: 0 }}>
-            <input type="month" name="m" defaultValue={sel} aria-label={t("rep_month")} style={{ flex: "0 1 170px" }} />
-            <button className={`btn${isRange ? " ghost" : ""}`} type="submit">
+        <PrintButton className="btn gold">{t("rep_print")}</PrintButton>
+      </div>
+
+      <div className="rep-bar no-print">
+        <nav className="rep-seg" aria-label={t("rep_viewMonth") + " / " + t("rep_viewRange")}>
+          <Link href="/app/report" aria-current={rangeView ? undefined : "page"}>
+            {t("rep_viewMonth")}
+          </Link>
+          <Link href="/app/report?view=range" aria-current={rangeView ? "page" : undefined}>
+            {t("rep_viewRange")}
+          </Link>
+        </nav>
+        {rangeView ? (
+          <form className="rep-form" method="get">
+            <label>
+              <span>{t("rep_from")}</span>
+              <input type="date" name="from" defaultValue={isRange ? from : thisMonth + "-01"} required />
+            </label>
+            <label>
+              <span>{t("rep_to")}</span>
+              <input type="date" name="to" defaultValue={isRange ? to : today} required />
+            </label>
+            <button className="btn" type="submit">
               {t("rep_show")}
             </button>
-            <PrintButton>{t("rep_print")}</PrintButton>
           </form>
-          <form className="filters" method="get" style={{ marginBottom: 0, alignItems: "center" }}>
-            <label style={{ color: "var(--muted)", fontSize: 13 }} htmlFor="rep-from">{t("rep_from")}</label>
-            <input id="rep-from" type="date" name="from" defaultValue={isRange ? from : ""} required style={{ flex: "0 1 160px" }} />
-            <label style={{ color: "var(--muted)", fontSize: 13 }} htmlFor="rep-to">{t("rep_to")}</label>
-            <input id="rep-to" type="date" name="to" defaultValue={isRange ? to : ""} required style={{ flex: "0 1 160px" }} />
-            <button className={`btn${isRange ? "" : " ghost"}`} type="submit">
+        ) : (
+          <form className="rep-form" method="get">
+            <label>
+              <span>{t("rep_month")}</span>
+              <input type="month" name="m" defaultValue={sel} required />
+            </label>
+            <button className="btn" type="submit">
               {t("rep_show")}
             </button>
           </form>
-          <div className="filters" style={{ marginBottom: 0 }}>
-            {presets.map(([name, a, b]) => (
-              <Link key={name} className="btn sm ghost" href={`/app/report?from=${a}&to=${b}`}>
-                {name}
-              </Link>
-            ))}
-          </div>
+        )}
+        <div className="rep-chips">
+          {presets.map((x) => (
+            <Link key={x.name} href={x.href} aria-current={x.on ? "page" : undefined}>
+              {x.name}
+            </Link>
+          ))}
         </div>
       </div>
-      <div className="kpis">
-        <Kpi label={t("rep_submitted")} value={cur.submitted} sub={t("rep_byDeadline")} />
-        <Kpi label={t("rep_won")} value={showMoney ? money(cur.wonValue, true) : cur.won} sub={t(isRange ? "rep_wonSubP" : "rep_wonSub", { n: cur.won })} />
-        <Kpi label={t("rep_winRate")} value={pct(winWon, winWon + winLost)} sub={isRange ? t("rep_winP") : t("rep_lastN", { n: MONTHS })} />
-        {showMoney && <Kpi label={t("rep_invoiced")} value={money(cur.invoiced, true)} sub={t(isRange ? "rep_period" : "rep_thisMonth")} />}
-        {showMoney && <Kpi label={t("rep_received")} value={money(cur.received, true)} sub={t(isRange ? "rep_period" : "rep_thisMonth")} />}
-        {showMoney && <Kpi label={t("rep_margin")} value={margin(cur)} sub={t("rep_marginSub")} />}
-        <Kpi label={t("rep_onTime")} value={pct(cur.onTime, cur.delivered)} sub={t(isRange ? "rep_delivSubP" : "rep_delivSub", { n: cur.delivered })} />
-        {showMoney && <Kpi label={t("rep_payDays")} value={curPay ?? "—"} sub={t(isRange ? "rep_payDaysSubP" : "rep_payDaysSub")} hot={curPay != null && curPay > 60} />}
-        {showMoney && <Kpi label={t("k_recv")} value={money(outstanding, true)} sub={t("rep_now")} hot={outstanding > 0} />}
+
+      <div className="rep-groups">
+        <section className={`rep-group${showMoney ? "" : " wide"}`}>
+          <h2>{t("rep_gBids")}</h2>
+          <Stat label={t("rep_submitted")} value={cur.submitted} sub={t("rep_byDeadline")} />
+          <Stat label={t("rep_won")} value={wonV} sub={t(isRange ? "rep_wonSubP" : "rep_wonSub", { n: cur.won })} />
+          <Stat label={t("rep_winRate")} value={pct(winWon, winWon + winLost)} sub={isRange ? t("rep_winP") : t("rep_lastN", { n: MONTHS })} />
+          {!showMoney && <Stat label={t("rep_onTime")} value={pct(cur.onTime, cur.delivered)} sub={t(isRange ? "rep_delivSubP" : "rep_delivSub", { n: cur.delivered })} />}
+        </section>
+        {showMoney && (
+          <section className="rep-group gold">
+            <h2>{t("rep_gMoney")}</h2>
+            <Stat label={t("rep_invoiced")} value={money(cur.invoiced, true)} sub={periodWord} />
+            <Stat label={t("rep_received")} value={money(cur.received, true)} sub={periodWord} />
+            <Stat label={t("k_recv")} value={money(outstanding, true)} sub={t("rep_now")} hot={outstanding > 0} />
+          </section>
+        )}
+        {showMoney && (
+          <section className="rep-group">
+            <h2>{t("rep_gOps")}</h2>
+            <Stat label={t("rep_margin")} value={margin(cur)} sub={t("rep_marginSub")} />
+            <Stat label={t("rep_onTime")} value={pct(cur.onTime, cur.delivered)} sub={t(isRange ? "rep_delivSubP" : "rep_delivSub", { n: cur.delivered })} />
+            <Stat
+              label={t("rep_payDays")}
+              value={curPay == null ? "—" : t("rep_days", { n: curPay })}
+              sub={t(isRange ? "rep_payDaysSubP" : "rep_payDaysSub")}
+              hot={curPay != null && curPay > 60}
+            />
+          </section>
+        )}
       </div>
-      <section className="panel-box">
+
+      {showMoney && <Chart rows={rows} label={(m) => MON[lang][+m.slice(5) - 1]} year={(m) => m.slice(0, 4)} t={t} />}
+
+      <section className="panel-box rep-table">
         <h2>{isRange ? t("rep_trendP") : t("rep_trend", { n: MONTHS })}</h2>
         <div className="tbl-wrap" style={{ border: 0 }}>
-          <table style={{ minWidth: showMoney ? 760 : 420 }}>
+          <table style={{ minWidth: showMoney ? 820 : 420 }}>
             <thead>
               <tr>
                 <th>{t("rep_month")}</th>
-                <th className="r">{t("rep_submitted")}</th>
+                <th className="r">{t("rep_cBids")}</th>
                 <th className="r">{t("rep_wonN")}</th>
-                {showMoney && <th className="r">{t("rep_wonV")}</th>}
-                {showMoney && <th className="r">{t("rep_invoiced")}</th>}
-                {showMoney && <th className="r">{t("rep_received")}</th>}
-                {showMoney && <th className="r">{t("rep_margin")}</th>}
-                <th className="r">{t("rep_onTime")}</th>
-                {showMoney && <th className="r">{t("rep_payDays")}</th>}
+                {showMoney && <th className="r">{t("rep_cValue")}</th>}
+                {showMoney && <th className="r">{t("rep_cInv")}</th>}
+                {showMoney && <th className="r">{t("rep_cRec")}</th>}
+                {showMoney && <th className="r">{t("rep_cMargin")}</th>}
+                <th className="r">{t("rep_cOnTime")}</th>
+                {showMoney && <th className="r">{t("rep_cDays")}</th>}
               </tr>
             </thead>
             <tbody>
-              {[...months.values()].reverse().map((m) => (
-                <tr key={m.m} style={{ cursor: "default", fontWeight: !isRange && m.m === sel ? 700 : undefined }}>
+              {[...rows].reverse().map((m) => (
+                <tr key={m.m} className={!isRange && m.m === sel ? "cur" : undefined}>
                   <td>{label(m.m!)}</td>
                   <td className="r num">{m.submitted}</td>
                   <td className="r num">{m.won}</td>
@@ -245,7 +293,7 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
                 </tr>
               ))}
               {isRange && (
-                <tr style={{ cursor: "default", fontWeight: 700 }}>
+                <tr className="tot">
                   <td>{t("rep_total")}</td>
                   <td className="r num">{cur.submitted}</td>
                   <td className="r num">{cur.won}</td>
@@ -260,10 +308,94 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
             </tbody>
           </table>
         </div>
-        <p className="empty" style={{ paddingBottom: 0, fontSize: 12.5 }}>
-          {t("rep_note")}{isRange && span === MAX_MONTHS ? " " + t("rep_maxNote", { n: MAX_MONTHS }) : ""}
+        <p className="rep-note">
+          {t("rep_note")}
+          {isRange && span === MAX_MONTHS ? " " + t("rep_maxNote", { n: MAX_MONTHS }) : ""}
         </p>
       </section>
     </>
+  );
+}
+
+function Stat({ label, value, sub, hot }: { label: string; value: string | number; sub: string; hot?: boolean }) {
+  return (
+    <div className={`rep-stat${hot ? " hot" : ""}`}>
+      <div>
+        <div className="l">{label}</div>
+        <div className="s">{sub}</div>
+      </div>
+      <div className="v num">{value}</div>
+    </div>
+  );
+}
+
+/** a round axis top: 1, 2, 2.5 or 5 times a power of ten, in four steps */
+function niceTop(max: number) {
+  if (max <= 0) return 4;
+  const raw = max / 4;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((k) => k * p).find((s) => s >= raw)!;
+  return step * 4;
+}
+
+/** value won and payments received per month, as paired bars on one money axis */
+function Chart({ rows, label, year, t }: { rows: Month[]; label: (m: string) => string; year: (m: string) => string; t: ReturnType<typeof translator> }) {
+  const top = niceTop(Math.max(...rows.map((r) => Math.max(r.wonValue, r.received))));
+  const h = (v: number) => `${(100 * v) / top}%`;
+  return (
+    <section className="panel-box rep-chart">
+      <h2>
+        {t("rep_chart")}
+        <span className="rep-legend">
+          <span>
+            <i className="won" />
+            {t("rep_wonV")}
+          </span>
+          <span>
+            <i className="rec" />
+            {t("rep_received")}
+          </span>
+        </span>
+      </h2>
+      <div className="rep-plot">
+        <div className="rep-y">
+          {[4, 3, 2, 1, 0].map((k) => (
+            <span key={k} className="num">
+              {k ? money((top * k) / 4, true).replace("TSh ", "") : "0"}
+            </span>
+          ))}
+        </div>
+        <div className="rep-cols">
+          {[1, 2, 3, 4].map((k) => (
+            <i key={k} className="grid" style={{ bottom: `${25 * k}%` }} />
+          ))}
+          {rows.map((r, i) => (
+            <div key={r.m} className={`rep-col${i >= rows.length / 2 ? " r" : ""}`} tabIndex={0}>
+              <div className="bars">
+                <b className="won" style={{ height: h(r.wonValue) }} />
+                <b className="rec" style={{ height: h(r.received) }} />
+              </div>
+              <div className="x">
+                {label(r.m!)}
+                {(i === 0 || r.m!.endsWith("-01")) && <small>{year(r.m!)}</small>}
+              </div>
+              <div className="tip" role="tooltip">
+                <strong>
+                  {label(r.m!)} {year(r.m!)}
+                </strong>
+                <span>
+                  <i className="won" />
+                  {t("rep_wonV")}: <b className="num">{money(r.wonValue, true)}</b>
+                </span>
+                <span>
+                  <i className="rec" />
+                  {t("rep_received")}: <b className="num">{money(r.received, true)}</b>
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
