@@ -6,6 +6,8 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   // variables added in the Cloudflare dashboard survive each deploy from GitHub
   "keep_vars": true,
+  // pull request branches are uploaded as Previews (npx wrangler preview), which needs this block
+  "previews": {},
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
