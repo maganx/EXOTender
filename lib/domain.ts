@@ -69,7 +69,7 @@ export type Invoice = { id: string; invoice_no: string | null; invoice_date: str
 export type TDoc = { id: string; std_key: string | null; label: string; section: string | null; note: string | null; page: number | null; status: "pending" | "done" | "na"; company_document_id: string | null };
 
 /* ---------- formatting ---------- */
-const MON = {
+export const MON = {
   sw: ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ago", "Sep", "Okt", "Nov", "Des"],
   en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
 };
