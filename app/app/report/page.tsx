@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Kpi } from "@/components/bits";
 import { PrintButton } from "@/components/PrintButton";
 import { MON, WON, canSeeMoney, money, type Stage } from "@/lib/domain";
@@ -6,14 +7,21 @@ import { one, requireOrg } from "@/lib/org";
 import { createClient } from "@/lib/supabase/server";
 
 const MONTHS = 6;
+// longest period shown month by month in the table
+const MAX_MONTHS = 24;
 const EAT_OFFSET = 3 * 60 * 60 * 1000;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-/** YYYY-MM of a date or timestamp, in East Africa Time */
-function monthOf(s: string | null | undefined) {
+/** YYYY-MM-DD of a date or timestamp, in East Africa Time */
+function dayOf(s: string | null | undefined) {
   if (!s) return null;
-  if (s.length === 10) return s.slice(0, 7);
+  if (s.length === 10) return s;
   const d = new Date(s);
-  return isNaN(+d) ? null : new Date(+d + EAT_OFFSET).toISOString().slice(0, 7);
+  return isNaN(+d) ? null : new Date(+d + EAT_OFFSET).toISOString().slice(0, 10);
+}
+function lastDay(m: string) {
+  const [y, mo] = m.split("-").map(Number);
+  return new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10);
 }
 function shiftMonth(m: string, n: number) {
   const [y, mo] = m.split("-").map(Number);
@@ -32,7 +40,7 @@ type Row = {
   invoices: { invoice_date: string | null; amount: number; paid: number; paid_on: string | null }[] | null;
 };
 type Month = {
-  m: string;
+  m?: string;
   submitted: number;
   won: number;
   wonValue: number;
@@ -51,15 +59,40 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
   const { t, lang } = await getT();
   const showMoney = canSeeMoney(ctx.role);
 
-  const thisMonth = new Date(Date.now() + EAT_OFFSET).toISOString().slice(0, 7);
-  const sel = /^\d{4}-\d{2}$/.test(searchParams.m ?? "") ? searchParams.m! : thisMonth;
-  const keys = Array.from({ length: MONTHS }, (_, i) => shiftMonth(sel, i - MONTHS + 1));
-  const months = new Map<string, Month>(
-    keys.map((m) => [m, { m, submitted: 0, won: 0, wonValue: 0, invoiced: 0, received: 0, marginNum: 0, marginDen: 0, delivered: 0, onTime: 0, payDays: [] }]),
-  );
+  const today = new Date(Date.now() + EAT_OFFSET).toISOString().slice(0, 10);
+  const thisMonth = today.slice(0, 7);
+  // a period (from, to) when both dates are given, otherwise one month
+  let from = DAY.test(searchParams.from ?? "") ? searchParams.from! : "";
+  let to = DAY.test(searchParams.to ?? "") ? searchParams.to! : "";
+  const isRange = !!(from && to);
+  if (isRange && from > to) [from, to] = [to, from];
+  const sel = isRange ? to.slice(0, 7) : /^\d{4}-\d{2}$/.test(searchParams.m ?? "") ? searchParams.m! : thisMonth;
+  if (!isRange) {
+    from = sel + "-01";
+    to = lastDay(sel);
+  }
+  // the table shows the 6 months up to the chosen month, or each month of the period
+  const span = isRange
+    ? Math.min(MAX_MONTHS, (+to.slice(0, 4) - +from.slice(0, 4)) * 12 + +to.slice(5, 7) - +from.slice(5, 7) + 1)
+    : MONTHS;
+  const keys = Array.from({ length: span }, (_, i) => shiftMonth(sel, i - span + 1));
+  const blank = (m?: string): Month => ({ m, submitted: 0, won: 0, wonValue: 0, invoiced: 0, received: 0, marginNum: 0, marginDen: 0, delivered: 0, onTime: 0, payDays: [] });
+  const months = new Map<string, Month>(keys.map((m) => [m, blank(m)]));
+  const total = blank();
+  /** the buckets a date counts in: its month row, and the totals when it falls in the period */
   const at = (s: string | null | undefined) => {
-    const k = monthOf(s);
-    return k ? months.get(k) : undefined;
+    const d = dayOf(s);
+    if (!d) return [];
+    const out: Month[] = [];
+    const m = months.get(d.slice(0, 7));
+    if (m && (!isRange || (d >= from && d <= to))) out.push(m);
+    if (d >= from && d <= to) out.push(total);
+    return out;
+  };
+  // win rate: over the period, or over the 6 months for a monthly report
+  const inWinWindow = (s: string | null | undefined) => {
+    const d = dayOf(s);
+    return !!d && (isRange ? d >= from && d <= to : months.has(d.slice(0, 7)));
   };
 
   const { data, error } = await (await createClient())
@@ -81,43 +114,44 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
     // a lost tender with no bid price was a no-bid, not a bid we lost
     const bidMade = won || r.stage === "submitted" || r.stage === "eval" || (r.stage === "lost" && bid > 0);
 
-    const dm = at(r.deadline);
-    if (dm && bidMade) {
-      dm.submitted++;
-      if (won) winWon++;
-      else if (r.stage === "lost") winLost++;
+    if (bidMade) {
+      for (const b of at(r.deadline)) b.submitted++;
+      if (inWinWindow(r.deadline)) {
+        if (won) winWon++;
+        else if (r.stage === "lost") winLost++;
+      }
     }
-    const am = won ? at(c?.award_date) : undefined;
-    if (am) {
-      am.won++;
-      am.wonValue += Number(c?.contract_value || 0) || Number(c?.award_amount || 0) || bid;
+    if (won) {
       const cost = Number(p?.cost || 0) + Number(p?.transport || 0) + Number(p?.other || 0);
-      if (bid > 0 && cost > 0) {
-        am.marginNum += bid - cost;
-        am.marginDen += bid;
+      for (const b of at(c?.award_date)) {
+        b.won++;
+        b.wonValue += Number(c?.contract_value || 0) || Number(c?.award_amount || 0) || bid;
+        if (bid > 0 && cost > 0) {
+          b.marginNum += bid - cost;
+          b.marginDen += bid;
+        }
       }
     }
     for (const d of r.deliveries ?? []) {
-      const m = d.status !== "planned" ? at(d.delivery_date) : undefined;
-      if (!m) continue;
-      m.delivered++;
-      if (!c?.end_date || d.delivery_date! <= c.end_date) m.onTime++;
+      if (d.status === "planned") continue;
+      for (const b of at(d.delivery_date)) {
+        b.delivered++;
+        if (!c?.end_date || d.delivery_date! <= c.end_date) b.onTime++;
+      }
     }
     for (const i of r.invoices ?? []) {
       const amount = Number(i.amount || 0);
       const paid = Number(i.paid || 0);
       outstanding += Math.max(0, amount - paid);
-      const im = at(i.invoice_date);
-      if (im) im.invoiced += amount;
-      const pm = at(i.paid_on);
-      if (pm) {
-        pm.received += paid;
-        if (i.invoice_date && paid >= amount) pm.payDays.push(days(i.invoice_date, i.paid_on!));
+      for (const b of at(i.invoice_date)) b.invoiced += amount;
+      for (const b of at(i.paid_on)) {
+        b.received += paid;
+        if (i.invoice_date && paid >= amount) b.payDays.push(days(i.invoice_date, i.paid_on!));
       }
     }
   }
 
-  const cur = months.get(sel)!;
+  const cur = total;
   const avg = (a: number[]) => (a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null);
   const margin = (m: Month) => pct(m.marginNum, m.marginDen);
   const label = (m: string) => {
@@ -125,37 +159,62 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
     return `${MON[lang][mo - 1]} ${y}`;
   };
   const curPay = avg(cur.payDays);
+  const fmtDay = (d: string) => `${+d.slice(8)} ${MON[lang][+d.slice(5, 7) - 1]} ${d.slice(0, 4)}`;
+  const q0 = shiftMonth(thisMonth, -((+thisMonth.slice(5) - 1) % 3));
+  const presets: [string, string, string][] = [
+    [t("rep_pQuarter"), q0 + "-01", today],
+    [t("rep_pYear"), thisMonth.slice(0, 4) + "-01-01", today],
+    [t("rep_p12"), shiftMonth(thisMonth, -11) + "-01", today],
+  ];
 
   return (
     <>
       <div className="view-head">
         <div>
-          <h1>{t("rep_t", { m: label(sel) })}</h1>
+          <h1>{isRange ? t("rep_tRange", { a: fmtDay(from), b: fmtDay(to) }) : t("rep_t", { m: label(sel) })}</h1>
           <p>
             {ctx.orgName} · {t("rep_s")}
           </p>
         </div>
-        <form className="filters no-print" method="get" style={{ marginBottom: 0 }}>
-          <input type="month" name="m" defaultValue={sel} aria-label={t("rep_month")} style={{ flex: "0 1 170px" }} />
-          <button className="btn" type="submit">
-            {t("rep_show")}
-          </button>
-          <PrintButton>{t("rep_print")}</PrintButton>
-        </form>
+        <div className="no-print" style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+          <form className="filters" method="get" style={{ marginBottom: 0 }}>
+            <input type="month" name="m" defaultValue={sel} aria-label={t("rep_month")} style={{ flex: "0 1 170px" }} />
+            <button className={`btn${isRange ? " ghost" : ""}`} type="submit">
+              {t("rep_show")}
+            </button>
+            <PrintButton>{t("rep_print")}</PrintButton>
+          </form>
+          <form className="filters" method="get" style={{ marginBottom: 0, alignItems: "center" }}>
+            <label style={{ color: "var(--muted)", fontSize: 13 }} htmlFor="rep-from">{t("rep_from")}</label>
+            <input id="rep-from" type="date" name="from" defaultValue={isRange ? from : ""} required style={{ flex: "0 1 160px" }} />
+            <label style={{ color: "var(--muted)", fontSize: 13 }} htmlFor="rep-to">{t("rep_to")}</label>
+            <input id="rep-to" type="date" name="to" defaultValue={isRange ? to : ""} required style={{ flex: "0 1 160px" }} />
+            <button className={`btn${isRange ? "" : " ghost"}`} type="submit">
+              {t("rep_show")}
+            </button>
+          </form>
+          <div className="filters" style={{ marginBottom: 0 }}>
+            {presets.map(([name, a, b]) => (
+              <Link key={name} className="btn sm ghost" href={`/app/report?from=${a}&to=${b}`}>
+                {name}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
       <div className="kpis">
         <Kpi label={t("rep_submitted")} value={cur.submitted} sub={t("rep_byDeadline")} />
-        <Kpi label={t("rep_won")} value={showMoney ? money(cur.wonValue, true) : cur.won} sub={t("rep_wonSub", { n: cur.won })} />
-        <Kpi label={t("rep_winRate")} value={pct(winWon, winWon + winLost)} sub={t("rep_lastN", { n: MONTHS })} />
-        {showMoney && <Kpi label={t("rep_invoiced")} value={money(cur.invoiced, true)} sub={t("rep_thisMonth")} />}
-        {showMoney && <Kpi label={t("rep_received")} value={money(cur.received, true)} sub={t("rep_thisMonth")} />}
+        <Kpi label={t("rep_won")} value={showMoney ? money(cur.wonValue, true) : cur.won} sub={t(isRange ? "rep_wonSubP" : "rep_wonSub", { n: cur.won })} />
+        <Kpi label={t("rep_winRate")} value={pct(winWon, winWon + winLost)} sub={isRange ? t("rep_winP") : t("rep_lastN", { n: MONTHS })} />
+        {showMoney && <Kpi label={t("rep_invoiced")} value={money(cur.invoiced, true)} sub={t(isRange ? "rep_period" : "rep_thisMonth")} />}
+        {showMoney && <Kpi label={t("rep_received")} value={money(cur.received, true)} sub={t(isRange ? "rep_period" : "rep_thisMonth")} />}
         {showMoney && <Kpi label={t("rep_margin")} value={margin(cur)} sub={t("rep_marginSub")} />}
-        <Kpi label={t("rep_onTime")} value={pct(cur.onTime, cur.delivered)} sub={t("rep_delivSub", { n: cur.delivered })} />
-        {showMoney && <Kpi label={t("rep_payDays")} value={curPay ?? "—"} sub={t("rep_payDaysSub")} hot={curPay != null && curPay > 60} />}
+        <Kpi label={t("rep_onTime")} value={pct(cur.onTime, cur.delivered)} sub={t(isRange ? "rep_delivSubP" : "rep_delivSub", { n: cur.delivered })} />
+        {showMoney && <Kpi label={t("rep_payDays")} value={curPay ?? "—"} sub={t(isRange ? "rep_payDaysSubP" : "rep_payDaysSub")} hot={curPay != null && curPay > 60} />}
         {showMoney && <Kpi label={t("k_recv")} value={money(outstanding, true)} sub={t("rep_now")} hot={outstanding > 0} />}
       </div>
       <section className="panel-box">
-        <h2>{t("rep_trend", { n: MONTHS })}</h2>
+        <h2>{isRange ? t("rep_trendP") : t("rep_trend", { n: MONTHS })}</h2>
         <div className="tbl-wrap" style={{ border: 0 }}>
           <table style={{ minWidth: showMoney ? 760 : 420 }}>
             <thead>
@@ -173,8 +232,8 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
             </thead>
             <tbody>
               {[...months.values()].reverse().map((m) => (
-                <tr key={m.m} style={{ cursor: "default", fontWeight: m.m === sel ? 700 : undefined }}>
-                  <td>{label(m.m)}</td>
+                <tr key={m.m} style={{ cursor: "default", fontWeight: !isRange && m.m === sel ? 700 : undefined }}>
+                  <td>{label(m.m!)}</td>
                   <td className="r num">{m.submitted}</td>
                   <td className="r num">{m.won}</td>
                   {showMoney && <td className="r num">{money(m.wonValue, true)}</td>}
@@ -185,11 +244,24 @@ export default async function MonthlyReport(props: { searchParams: Promise<Recor
                   {showMoney && <td className="r num">{avg(m.payDays) ?? "—"}</td>}
                 </tr>
               ))}
+              {isRange && (
+                <tr style={{ cursor: "default", fontWeight: 700 }}>
+                  <td>{t("rep_total")}</td>
+                  <td className="r num">{cur.submitted}</td>
+                  <td className="r num">{cur.won}</td>
+                  {showMoney && <td className="r num">{money(cur.wonValue, true)}</td>}
+                  {showMoney && <td className="r num">{money(cur.invoiced, true)}</td>}
+                  {showMoney && <td className="r num">{money(cur.received, true)}</td>}
+                  {showMoney && <td className="r num">{margin(cur)}</td>}
+                  <td className="r num">{pct(cur.onTime, cur.delivered)}</td>
+                  {showMoney && <td className="r num">{curPay ?? "—"}</td>}
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <p className="empty" style={{ paddingBottom: 0, fontSize: 12.5 }}>
-          {t("rep_note")}
+          {t("rep_note")}{isRange && span === MAX_MONTHS ? " " + t("rep_maxNote", { n: MAX_MONTHS }) : ""}
         </p>
       </section>
     </>
