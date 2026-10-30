@@ -347,5 +347,75 @@ details.sec summary.sum{cursor:pointer;font-weight:600;font-size:13.5px;color:va
 }
 .saved{background:var(--ok-soft);color:var(--ok);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-bottom:10px}
 
-/* print: monthly report for the board */
-@media print{.band,.no-print,.subbar{display:none!important}.page{padding-top:0}.kpis{grid-template-columns:repeat(3,1fr)}.tbl-wrap{overflow:visible}}
+/* report: period controls, KPI groups, won/paid chart, month table */
+:root{--c-won:#2A4FA8;--c-rec:#BF8B2E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-won:#587BD8;--c-rec:#B98D38}}
+:root[data-theme="dark"]{--c-won:#587BD8;--c-rec:#B98D38}
+.rep-bar{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:18px}
+.rep-seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.rep-seg a{padding:6px 14px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--muted);text-decoration:none;white-space:nowrap}
+.rep-seg a[aria-current]{background:var(--surface);color:var(--navy);box-shadow:0 1px 3px rgba(19,40,92,.14)}
+.rep-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
+.rep-form label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.rep-form input{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:7px 10px;font:inherit;font-size:14px;text-transform:none;letter-spacing:0;font-weight:500}
+.rep-chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.rep-chips a{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--fg);text-decoration:none;white-space:nowrap}
+.rep-chips a:hover{border-color:var(--gold)}
+.rep-chips a[aria-current]{background:var(--navy);border-color:var(--navy);color:var(--surface)}
+.rep-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:18px}
+.rep-group{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px 6px;border-top:3px solid var(--c-won)}
+.rep-group.gold{border-top-color:var(--gold)}
+.rep-group h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--gold-strong);font-weight:700;margin:12px 0 2px}
+.rep-stat{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.rep-group h2+.rep-stat{border-top:0}
+.rep-stat .l{font-weight:600;font-size:14px;color:var(--fg)}
+.rep-stat .s{font-size:12.5px;color:var(--muted);margin-top:1px}
+.rep-stat .v{font-family:var(--display);font-weight:800;font-size:22px;color:var(--navy);white-space:nowrap;text-align:right}
+.rep-stat.hot .v{color:var(--bad)}
+.rep-group.wide{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 24px;padding-bottom:10px}
+.rep-group.wide h2{grid-column:1/-1}
+.rep-group.wide .rep-stat{border-top:0;flex-direction:column-reverse;align-items:flex-start;gap:4px;padding:8px 0}
+.rep-group.wide .rep-stat .v{text-align:left}
+.rep-chart,.rep-table{margin-bottom:18px}
+.rep-chart h2{flex-wrap:wrap}
+.rep-legend{display:flex;gap:16px;font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted)}
+.rep-legend span{display:inline-flex;align-items:center;gap:6px}
+.rep-chart i.won,.rep-chart i.rec{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c-won)}
+.rep-chart i.rec{background:var(--c-rec)}
+.rep-plot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:6px}
+.rep-y{display:flex;flex-direction:column;justify-content:space-between;height:200px;font-size:11.5px;color:var(--muted);text-align:right;transform:translateY(-.5em)}
+.rep-y span{line-height:1}
+.rep-cols{position:relative;display:flex;height:200px;border-bottom:1px solid var(--line)}
+.rep-cols .grid{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--line)}
+.rep-col{position:relative;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;outline:none;min-width:0}
+.rep-col:hover,.rep-col:focus-visible{background:color-mix(in srgb,var(--surface-2) 70%,transparent);border-radius:8px 8px 0 0}
+.rep-col .bars{display:flex;align-items:flex-end;gap:2px;height:100%;width:100%;justify-content:center}
+.rep-col .bars b{width:clamp(6px,28%,22px);border-radius:4px 4px 0 0;background:var(--c-won)}
+.rep-col .bars b.rec{background:var(--c-rec)}
+.rep-col .x{position:absolute;top:100%;margin-top:6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.2;white-space:nowrap}
+.rep-col .x small{display:block;font-size:10.5px}
+.rep-col .tip{display:none;position:absolute;top:6px;left:50%;z-index:3;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:8px 11px;font-size:12.5px;white-space:nowrap;flex-direction:column;gap:3px}
+.rep-col:hover .tip,.rep-col:focus-visible .tip{display:flex}
+.rep-col.r .tip{left:auto;right:50%}
+.rep-col .tip span{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.rep-col .tip b{color:var(--fg)}
+.rep-plot+*{margin-top:0}
+.rep-chart .rep-plot{padding-bottom:34px}
+.rep-table th,.rep-table td{white-space:nowrap}
+.rep-table td:first-child{font-weight:600}
+.rep-table tbody tr{cursor:default}
+.rep-table tr.cur td{background:var(--gold-soft)}
+.rep-table tr.tot td{font-weight:700;border-top:2px solid var(--navy);border-bottom:0;background:var(--surface-2)}
+.rep-note{color:var(--muted);font-size:12.5px;margin:12px 2px 0}
+@media (max-width:640px){
+  .rep-chips{margin-left:0}
+  .rep-form{width:100%}
+  .rep-form label{flex:1 1 140px}
+  .rep-form label span{min-width:52px}
+  .rep-form input{flex:1;min-width:0}
+  .rep-y,.rep-cols{height:160px}
+  .rep-stat .v{font-size:20px}
+}
+
+/* print: report for the board */
+@media print{.band,.no-print,.subbar{display:none!important}.page{padding-top:0}.kpis,.rep-groups{grid-template-columns:repeat(3,1fr)}.tbl-wrap{overflow:visible}.rep-col .tip{display:none!important}.rep-chart,.rep-group{break-inside:avoid}}
