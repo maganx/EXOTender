@@ -19,8 +19,8 @@ Multi-company tender management for Tanzanian government tenders (NeST), built w
 1. **Database (Supabase):** Supabase dashboard → SQL Editor → bandika yaliyomo kwenye `supabase/migrations/0001_init.sql` → Run. Kisha fanya hivyo hivyo kwa `supabase/migrations/0002_files_billing.sql` (faili za tenda, usomaji wa Claude, vifurushi na malipo).
 2. **Auth:** Supabase → Authentication → URL Configuration → weka `Site URL` kuwa anwani ya tovuti (mfano `https://tenda-desk.netlify.app`) na ongeza `https://<anwani>/auth/callback` kwenye Redirect URLs.
 3. **Hosting (Cloudflare Workers):** Cloudflare dashboard → Workers & Pages → Create → Import a repository → chagua repository hii, kisha:
-   - Build command: `npx opennextjs-cloudflare build`
-   - Deploy command: `npx opennextjs-cloudflare deploy`
+   - Settings → Builds → tab **Production**: branch `main`, Build command `npx opennextjs-cloudflare build`, Deploy command `npx wrangler deploy`
+   - Tab **Previews Base** (matawi ya PR): Build command `npx opennextjs-cloudflare build`, Deploy command `npx wrangler preview` (inahitaji `"previews": {}` kwenye `wrangler.jsonc`, tayari ipo)
    - Build variables / Variables and secrets (zote mbili, build na runtime):
      - `NEXT_PUBLIC_SUPABASE_URL` = `https://hyizioycuwifddtrzbri.supabase.co`
      - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase → Project Settings → API → `anon public` key
