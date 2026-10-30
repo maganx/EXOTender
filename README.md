@@ -80,6 +80,10 @@ npm install
 npm run dev
 ```
 
+## Data ya mfano / Demo data
+
+`supabase/demo/demo_seed.sql` inaweka data ya mfano kwenye kampuni moja (badilisha jina kwenye mstari wa `COMPANY`): tenda 16 za kila hatua, bei, checklist, mikataba, delivery, invoice, malipo, nyaraka za kampuni na mwaliko mmoja. Tarehe zinahesabiwa kutoka leo. Kila tenda ya mfano inaanza na `DEMO-`, na `supabase/demo/demo_remove.sql` inaiondoa yote bila kugusa data halisi. Nyaraka za mfano hazina faili halisi, kwa hiyo hazifunguki.
+
 ## Majaribio ya database / Database tests
 
 `supabase/tests/` ina majaribio yanayothibitisha kwamba kampuni moja haioni data ya nyingine na kwamba roles zinafanya kazi (PostgreSQL 16):
